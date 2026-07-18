@@ -408,7 +408,7 @@
     <input class="site-input" id="siteInput" placeholder="고객명" style="flex:1">
     <input class="site-input" id="custPhone" placeholder="연락처" style="flex:1" inputmode="tel">
   </div>
-  <input class="site-input" id="addrDisplay" placeholder="🔍 주소 검색 (탭하여 검색)" readonly style="width:100%;margin-top:7px;cursor:pointer">
+  <input class="site-input" id="addrDisplay" placeholder="🔍 주소 검색 (클릭/탭하여 검색)" readonly style="width:100%;margin-top:7px;cursor:pointer">
   <div class="toolbar-top">
     <button id="saveTopBtn">💾 저장</button>
     <button id="loadBtn">📂 불러오기</button>
@@ -433,39 +433,26 @@
 
 <div class="notice" id="notice">
   <b>이 브라우저는 블루투스 미지원</b>
-  <p>측정기 연결은 <code>안드로이드 크롬</code>에서만 돼요. 나머지 기능은 여기서도 테스트되고, 측정값은 "직접 입력"·"시뮬레이션"으로 채울 수 있어요.</p>
+  <p>레이저 측정기 연결은 <code>안드로이드 크롬</code>에서만 돼요. 이 환경에선 측정값을 <b>직접 입력</b>(사이즈칸 길게누르기·더블클릭)으로 채우면 나머지 기능은 그대로 작동합니다.</p>
 </div>
 
 <!-- 1 사진 + AI -->
+<!-- 1 위치 -->
 <div class="card">
-  <div class="step-h"><span class="step-n">1</span><h2>창호 사진</h2><span class="opt">탭하면 카메라</span></div>
-  <label class="photo-box" id="photoBox">
-    <div class="ph" id="photoPlaceholder">
-      <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
-      <span>창호 위치 촬영</span>
-    </div>
-    <span class="retake" id="retake" style="display:none">다시 촬영</span>
-    <input type="file" id="photoInput" accept="image/*" capture="environment">
-  </label>
-  <button class="btn ai" id="aiBtn" disabled><span class="spin"></span><span id="aiBtnText">✨ AI 형태 분석</span></button>
-</div>
-
-<!-- 2 위치 -->
-<div class="card">
-  <div class="step-h"><span class="step-n">2</span><h2>설치 위치</h2><span class="opt" id="locOpt"></span></div>
+  <div class="step-h"><span class="step-n">1</span><h2>설치 위치</h2><span class="opt" id="locOpt"></span></div>
   <div class="loc-chips" id="locChips"></div>
   <input class="loc-input" id="locInput" placeholder="직접 입력">
 </div>
 
 <!-- 3 창 종류 -->
 <div class="card">
-  <div class="step-h"><span class="step-n">3</span><h2>창 종류</h2><span class="opt" id="productOpt">미선택</span></div>
+  <div class="step-h"><span class="step-n">2</span><h2>창 종류</h2><span class="opt" id="productOpt">미선택</span></div>
   <div class="spec-chips" id="productChips"></div>
 </div>
 
 <!-- 4 창 형태 -->
 <div class="card">
-  <div class="step-h"><span class="step-n">4</span><h2>창 형태</h2><span class="opt" id="shapeOpt">2W</span></div>
+  <div class="step-h"><span class="step-n">3</span><h2>창 형태</h2><span class="opt" id="shapeOpt">2W</span></div>
   <div class="shape-grid" id="shapeGrid"></div>
   <div class="side-row" id="sideRow">
     <span class="sl" id="sideLabel">핸들 방향</span>
@@ -475,7 +462,7 @@
 
 <!-- 5 실측 + 확정 사이즈 -->
 <div class="card">
-  <div class="step-h"><span class="step-n">5</span><h2>6포인트 실측</h2><span class="opt" id="measOpt">0 / 6</span></div>
+  <div class="step-h"><span class="step-n">4</span><h2>6포인트 실측</h2><span class="opt" id="measOpt">0 / 6</span></div>
   <svg class="diagram" id="diagram" viewBox="0 0 360 300" role="img" aria-label="창호 실측 도면"></svg>
   <div class="ratio-tag" id="ratioTag"></div>
   <div class="size-block">
@@ -484,7 +471,7 @@
       <div class="size-box" data-field="h"><label>높이 H</label><div class="sv" id="hVal">—</div><div class="su">mm</div></div>
       <div class="size-box vbox" id="vBox" data-field="v" style="display:none"><label>벤트 V</label><div class="sv" id="vVal">—</div><div class="su">mm</div></div>
     </div>
-    <div class="size-meta" id="sizeMeta">W·H는 3점 최소값 자동 제안. 확정칸을 길게 눌러 직접 입력하세요.</div>
+    <div class="size-meta" id="sizeMeta">W·H는 3점 최소값 자동 제안. 확정칸을 눌러 직접 입력 (PC 클릭 · 모바일 길게).</div>
     <button class="confirm-next" id="confirmNextBtn">✓ 확정하고 다음 창 →</button>
   </div>
 </div>
@@ -575,6 +562,13 @@
   <div class="lead" id="detailRoad"></div>
   <input class="site-input" id="detailInput" placeholder="동/호" style="width:100%;margin-bottom:10px">
   <button class="btn close" id="detailDone" style="width:100%">확인</button>
+</div></div>
+
+<div class="overlay" id="postOverlay"><div class="sheet" style="padding:12px;max-width:96vw;width:460px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h3 style="margin:0">주소 검색</h3><button class="btn sm" id="postClose">닫기</button>
+  </div>
+  <div id="postEmbed" style="width:100%;height:60vh;min-height:340px"></div>
 </div></div>
 
 <div class="overlay" id="loadOverlay"><div class="sheet">
@@ -816,37 +810,7 @@ function updateMeasCount(){ $('#measOpt').textContent=`${filledCount()} / ${getO
 function updateRatioTag(){ $('#ratioTag').textContent = (current.w&&current.h)?`도면 비율 적용 · ${current.w} : ${current.h}`:''; }
 function refresh(){ renderDiagram(); updateMeasCount(); updateRatioTag(); autosave(); }
 
-/* ===== 1 사진 ===== */
-$('#photoInput').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=async()=>{ const compressed=await compressImage(r.result,900,0.6); current.photo=compressed;
-    const box=$('#photoBox');
-    let img=box.querySelector('img'); if(!img){img=document.createElement('img');box.prepend(img);} img.src=compressed;
-    $('#photoPlaceholder').style.display='none'; $('#retake').style.display=''; box.classList.add('has');
-    $('#aiBtn').disabled=false; autosave(); };
-  r.readAsDataURL(f);
-});
 
-/* ===== AI 형태 분석 ===== */
-async function analyzeShape(){
-  if(!current.photo){ toast('먼저 사진을 촬영하세요'); return; }
-  if(!AI_PROXY_URL){ toast('AI 프록시 URL을 코드 상단에 설정하세요'); return; }
-  const btn=$('#aiBtn'); btn.classList.add('loading'); btn.disabled=true; $('#aiBtnText').textContent='분석 중…';
-  try{
-    const b64=current.photo.split(',')[1];
-    const res=await fetch(AI_PROXY_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({image:b64})});
-    const j=await res.json();
-    if(j.shape && SHAPE_DEFS[j.shape]){
-      selectShape(j.shape);
-      if(j.side==='좌'||j.side==='우') selectSide(j.side);
-      const cell=document.querySelector(`.shape-cell[data-id="${j.shape}"]`); if(cell) cell.classList.add('ai-pick');
-      toast(`AI 추천: ${shapeLabel(j.shape)}${(SHAPE_DEFS[j.shape].side&&j.side)?' · '+j.side:''} (확신 ${j.confidence||'-'}) — 확인해주세요`);
-    } else { toast('형태 인식 실패 — 직접 선택해주세요'); }
-  }catch(err){ log('AI 오류: '+err.message); toast('AI 분석 오류 — 직접 선택해주세요'); }
-  finally{ btn.classList.remove('loading'); btn.disabled=false; $('#aiBtnText').textContent='✨ AI 형태 분석'; }
-}
-$('#aiBtn').addEventListener('click',analyzeShape);
 
 /* ===== 2 위치 ===== */
 const chipsWrap=$('#locChips');
@@ -881,16 +845,24 @@ function showFullAddr(){
 /* 도로명주소 검색 → 동/호 입력 시트 → 전체주소 */
 $('#addrDisplay').addEventListener('click',()=>{
   if(typeof daum==='undefined' || !daum.Postcode){ toast('주소 검색은 인터넷 연결 시 사용돼요'); return; }
-  new daum.Postcode({ oncomplete:function(data){
-    siteAddr = data.roadAddress || data.jibunAddress || data.address || '';
-    siteBuilding = data.buildingName || '';
-    $('#detailRoad').textContent = '📍 '+siteAddr + (siteBuilding?` (${siteBuilding})`:'');
-    $('#detailInput').value = siteDetail || '';
-    updateCustGate(); autosave();
-    $('#detailOverlay').classList.add('show');
-    setTimeout(()=>$('#detailInput').focus(),100);
-  }}).open();
+  const layer=$('#postEmbed'); layer.innerHTML='';
+  $('#postOverlay').classList.add('show');
+  new daum.Postcode({
+    width:'100%', height:'100%',
+    oncomplete:function(data){
+      siteAddr = data.roadAddress || data.jibunAddress || data.address || '';
+      siteBuilding = data.buildingName || '';
+      $('#postOverlay').classList.remove('show');
+      $('#detailRoad').textContent = '📍 '+siteAddr + (siteBuilding?` (${siteBuilding})`:'');
+      $('#detailInput').value = siteDetail || '';
+      updateCustGate(); autosave();
+      $('#detailOverlay').classList.add('show');
+      setTimeout(()=>$('#detailInput').focus(),120);
+    }
+  }).embed(layer);
 });
+$('#postClose').addEventListener('click',()=>$('#postOverlay').classList.remove('show'));
+$('#postOverlay').addEventListener('click',e=>{ if(e.target===$('#postOverlay')) $('#postOverlay').classList.remove('show'); });
 $('#detailDone').addEventListener('click',()=>{
   siteDetail = $('#detailInput').value.trim();
   showFullAddr(); autosave();
@@ -1675,7 +1647,7 @@ function computeSize(){
   if(w.length)m.push(`W 최소 ${Math.min(...w)} → 확정 ${current.w}`);
   if(h.length)m.push(`H 최소 ${Math.min(...h)} → 확정 ${current.h}`);
   if('V' in current.data)m.push(`V ${current.v}`);
-  $('#sizeMeta').textContent=m.length?m.join(' / ')+' (5mm 반내림)':'W·H는 3점 최소값을 5mm 반내림해 자동 제안. 확정칸을 길게 눌러 직접 입력.';
+  $('#sizeMeta').textContent=m.length?m.join(' / ')+' (5mm 반내림)':'W·H는 3점 최소값을 5mm 반내림해 자동 제안. 확정칸을 눌러 직접 입력 (PC 클릭·모바일 길게).';
 }
 
 /* ── 커스텀 숫자 키패드 ── */
@@ -1711,24 +1683,32 @@ $('#kpDone').addEventListener('click',()=>{
   autosave(); closeKeypad();
 });
 $('#kpOverlay').addEventListener('click',e=>{ if(e.target===$('#kpOverlay')) closeKeypad(); });
+/* PC 물리 키보드로 숫자 입력 */
+document.addEventListener('keydown',e=>{
+  if(!kpOpen) return;
+  if(e.key>='0'&&e.key<='9'){ if(kpBuf==='0') kpBuf=e.key; else if(kpBuf.length<5) kpBuf+=e.key; $('#kpVal').textContent=kpBuf; e.preventDefault(); }
+  else if(e.key==='Backspace'){ kpBuf=kpBuf.length>1?kpBuf.slice(0,-1):'0'; $('#kpVal').textContent=kpBuf; e.preventDefault(); }
+  else if(e.key==='Enter'){ if(kpReady) $('#kpDone').click(); e.preventDefault(); }
+  else if(e.key==='Escape'){ closeKeypad(); e.preventDefault(); }
+});
 
 /* 확정사이즈 직접입력: ① 길게 누르기  ② 두 번 터치 (자동값 실수 방지) */
+const FINE_POINTER = !!(window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches);
 document.querySelectorAll('.size-box').forEach(b=>{
-  let lt=null, sx=0, sy=0, lastTap=0, moved=false;
   const open=()=>{ if(!kpOpen) openKeypad(b.dataset.field); };
-  // 터치
-  b.addEventListener('touchstart',e=>{ if(kpOpen)return; const t=e.touches[0]; sx=t.clientX; sy=t.clientY; moved=false;
-    lt=setTimeout(()=>{ lt=null; open(); },500); },{passive:true});
-  b.addEventListener('touchmove',e=>{ const t=e.touches[0]; if(Math.abs(t.clientX-sx)>14||Math.abs(t.clientY-sy)>14){ moved=true; if(lt){clearTimeout(lt);lt=null;} } },{passive:true});
-  b.addEventListener('touchend',e=>{ if(lt){ clearTimeout(lt); lt=null; }
-    if(moved||kpOpen) return;
-    const now=Date.now(); if(now-lastTap<340){ lastTap=0; open(); } else lastTap=now; });
-  // 데스크톱: 더블클릭 + 길게 누르기
-  b.addEventListener('dblclick',open);
-  let mt=null;
-  b.addEventListener('mousedown',()=>{ if(kpOpen)return; mt=setTimeout(()=>{mt=null;open();},500); });
-  b.addEventListener('mouseup',()=>{ if(mt){clearTimeout(mt);mt=null;} });
-  b.addEventListener('mouseleave',()=>{ if(mt){clearTimeout(mt);mt=null;} });
+  if(FINE_POINTER){
+    b.addEventListener('click',open);   // PC/마우스: 한 번 클릭으로 바로 직접 입력
+  } else {
+    // 모바일/태블릿: 길게 누르기 또는 두 번 탭 (레이저 자동값 실수 방지)
+    let lt=null, sx=0, sy=0, lastTap=0, moved=false;
+    b.addEventListener('touchstart',e=>{ if(kpOpen)return; const t=e.touches[0]; sx=t.clientX; sy=t.clientY; moved=false;
+      lt=setTimeout(()=>{ lt=null; open(); },500); },{passive:true});
+    b.addEventListener('touchmove',e=>{ const t=e.touches[0]; if(Math.abs(t.clientX-sx)>14||Math.abs(t.clientY-sy)>14){ moved=true; if(lt){clearTimeout(lt);lt=null;} } },{passive:true});
+    b.addEventListener('touchend',e=>{ if(lt){ clearTimeout(lt); lt=null; }
+      if(moved||kpOpen) return;
+      const now=Date.now(); if(now-lastTap<340){ lastTap=0; open(); } else lastTap=now; });
+    b.addEventListener('dblclick',open);
+  }
 });
 
 $('#diagram').addEventListener('click',e=>{
@@ -1813,10 +1793,6 @@ function deleteWindow(i){
 
 /* 폼에 한 창 불러오기 */
 function loadIntoForm(win){
-  const box=$('#photoBox'); let img=box.querySelector('img');
-  if(win.photo){ if(!img){img=document.createElement('img');box.prepend(img);} img.src=win.photo;
-    $('#photoPlaceholder').style.display='none'; $('#retake').style.display=''; box.classList.add('has'); $('#aiBtn').disabled=false; }
-  else { if(img)img.remove(); $('#photoPlaceholder').style.display=''; $('#retake').style.display='none'; box.classList.remove('has'); $('#aiBtn').disabled=true; }
   $('#locInput').value=''; document.querySelectorAll('.loc-chip').forEach(x=>x.classList.toggle('sel', x.textContent===win.location));
   if(win.location && !LOCATIONS.includes(win.location)) $('#locInput').value=win.location;
   $('#locOpt').textContent=win.location||'';
@@ -1838,12 +1814,10 @@ function editWindow(i){
 
 function resetForm(){
   current=blankWindow(); activeId=null; editingIndex=null;
-  const box=$('#photoBox'); const img=box.querySelector('img'); if(img)img.remove();
-  $('#photoPlaceholder').style.display=''; $('#retake').style.display='none'; box.classList.remove('has'); $('#aiBtn').disabled=true;
   $('#locInput').value=''; $('#locOpt').textContent=''; document.querySelectorAll('.loc-chip').forEach(x=>x.classList.remove('sel'));
   renderProduct();
   current.w=null;current.h=null;current.v=null; renderSizeDisplay();
-  $('#sizeMeta').textContent='W·H는 3점 최소값을 5mm 반내림해 자동 제안. 확정칸을 길게 눌러 직접 입력.';
+  $('#sizeMeta').textContent='W·H는 3점 최소값을 5mm 반내림해 자동 제안. 확정칸을 눌러 직접 입력 (PC 클릭·모바일 길게).';
   selectShape('2W'); selectSide('좌');
   setActive('W1');                      // 새 창은 자동으로 W1 활성(깜빡)
   updateActionLabels();
@@ -1918,8 +1892,7 @@ $('#doneBtn').addEventListener('click',()=>{
     const jub=('V' in w.data)?` · 벤트 ${w.data['V']}`:'';
     const sp=w.spec||{}; const gl=sp.thick?`${sp.thick} ${sp.outer||''}`:'세부상담 전';
     const col=(sp.color&&sp.color!=='투명')?' · '+sp.color:'';
-    item.innerHTML=`${w.photo?`<img src="${w.photo}">`:'<div class="noimg">NO IMG</div>'}
-      <div class="info"><b>[${i+1}] ${w.location||'(이름없음)'}</b><span class="tag">${w.product?w.product+' · ':''}${shapeLabel(w.shape)}${(SHAPE_DEFS[w.shape]||{}).side?' · '+w.side:''}</span>
+    item.innerHTML=`<div class="info"><b>[${i+1}] ${w.location||'(이름없음)'}</b><span class="tag">${w.product?w.product+' · ':''}${shapeLabel(w.shape)}${(SHAPE_DEFS[w.shape]||{}).side?' · '+w.side:''}</span>
       <span>W ${w.w} × H ${w.h} mm${jub}</span>
       <span>${gl}${col}</span></div><div class="num">[${i+1}]</div>`;
     list.appendChild(item); });
