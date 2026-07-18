@@ -452,13 +452,14 @@
     <input id="lgPw" type="password" placeholder="비밀번호" autocomplete="current-password">
     <button class="lg-btn" id="lgBtn">로그인</button>
     <div class="lg-err" id="lgErr"></div>
+    <button class="lg-btn" id="lgChpwBtn" style="background:transparent;color:var(--brand);border:1px solid var(--hair);margin-top:8px">비밀번호 변경</button>
     <div class="lg-note">아이디는 본인 이름입니다 · 초기 비밀번호 1234<br>비밀번호를 잊었다면 관리자에게 초기화를 요청하세요</div>
   </div>
 </div>
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v60</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v61</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -637,6 +638,7 @@
 <div class="overlay" id="pwOverlay"><div class="sheet">
   <h3 id="pwTitle">비밀번호 변경</h3>
   <div class="lead" id="pwLead">현재 비밀번호와 새 비밀번호를 입력하세요</div>
+  <div class="lead" id="pwWho" style="font-weight:700;color:var(--brand);margin-top:-6px"></div>
   <input class="site-input" id="pwOld" type="password" placeholder="현재 비밀번호" style="width:100%;margin-bottom:8px">
   <input class="site-input" id="pwNew" type="password" placeholder="새 비밀번호 (4자 이상)" style="width:100%;margin-bottom:8px">
   <input class="site-input" id="pwNew2" type="password" placeholder="새 비밀번호 확인" style="width:100%;margin-bottom:8px">
@@ -842,7 +844,7 @@ async function flushLogs(){
       body:JSON.stringify({action:'log',token:AUTH.token,items:q})});
     const j=await res.json();
     if(j&&j.ok) LS.set('kcc_logq',[]);
-    else if(j&&j.error==='auth'){ doLogout(true); }
+    else if(j&&j.error==='auth'){ /* 토큰 만료 — 작업은 계속, 로그는 대기열 유지 */ }
   }catch(e){ /* 오프라인 — 다음에 재시도 */ }
   finally{ flushing=false; }
 }
@@ -871,8 +873,11 @@ async function doLogin(){
 }
 /* ===== 비밀번호 변경 ===== */
 let pwForce=false;   // 초기비번 사용자 → 변경 전까지 닫을 수 없음
-function openChpw(force){
+let pwUserId='';     // 변경 대상 아이디 (로그인 전에도 사용)
+function openChpw(force,userId){
   pwForce=!!force;
+  pwUserId = userId || (AUTH&&AUTH.id) || '';
+  $('#pwWho').textContent = pwUserId? `${pwUserId} 님` : '';
   $('#pwOld').value=''; $('#pwNew').value=''; $('#pwNew2').value=''; $('#pwErr').textContent='';
   $('#pwTitle').textContent = force? '새 비밀번호를 정하세요' : '비밀번호 변경';
   $('#pwLead').textContent = force
@@ -891,23 +896,20 @@ async function submitChpw(){
   if(newPw!==newPw2){ err.textContent='새 비밀번호가 서로 다릅니다'; return; }
   if(newPw.length<4){ err.textContent='새 비밀번호는 4자 이상이어야 합니다'; return; }
   if(newPw==='1234'){ err.textContent='초기 비밀번호(1234)는 사용할 수 없습니다'; return; }
-  if(!AUTH||!AUTH_URL){ err.textContent='로그인 상태가 아니에요'; return; }
+  if(!AUTH_URL){ err.textContent='서버 주소가 설정되지 않았어요'; return; }
+  if(!pwUserId && !(AUTH&&AUTH.id)){ err.textContent='아이디를 먼저 입력하세요'; return; }
   btn.disabled=true; btn.textContent='변경 중…'; err.textContent='';
   try{
     const res=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'chpw',token:AUTH.token,oldPw,newPw,device:navigator.userAgent.slice(0,120)})});
+      body:JSON.stringify({action:'chpw',id:pwUserId||(AUTH&&AUTH.id)||'',token:AUTH&&AUTH.token,oldPw,newPw,device:navigator.userAgent.slice(0,120)})});
     const j=await res.json();
     if(!j.ok){
-      if(j.error==='auth'){                     // 토큰 만료·서버 재배포 등 → 재로그인
-        err.textContent='로그인이 만료되었어요. 다시 로그인해 주세요.';
-        setTimeout(()=>{ pwForce=false; $('#pwOverlay').classList.remove('show'); doLogout(true); toast('다시 로그인해 주세요'); },1200);
-        return;
-      }
       err.textContent=j.error||'변경 실패'; return;
     }
     pwForce=false;
     $('#pwOverlay').classList.remove('show');
-    toast('비밀번호가 변경되었습니다 ✓');
+    if(!AUTH){ $('#lgPw').value=''; $('#lgErr').textContent=''; $('#loginGate').classList.add('show'); toast('변경 완료 — 새 비밀번호로 로그인하세요'); }
+    else toast('비밀번호가 변경되었습니다 ✓');
   }catch(e){ err.textContent='서버에 연결할 수 없어요 — 인터넷을 확인하세요'; }
   finally{ btn.disabled=false; btn.textContent='변경하기'; }
 }
@@ -937,7 +939,7 @@ async function verifySession(){
     const res=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'log',token:AUTH.token,items:[{event:'session_check',detail:'세션 확인',ts:Date.now()}]})});
     const j=await res.json();
-    if(j && j.error==='auth'){ doLogout(true); toast('로그인이 만료되었어요 — 다시 로그인해 주세요'); }
+    if(j && j.error==='auth'){ AUTH=null; LS.set('kcc_auth',null); applyRoleUI(); $('#loginGate').classList.add('show'); }
   }catch(e){ /* 오프라인이면 그대로 사용 */ }
 }
 async function openLogs(){
@@ -2438,6 +2440,11 @@ $('#lgId').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#lgPw').focus(
 $('#logoutBtn').addEventListener('click',()=>{ if(confirm('로그아웃할까요?')) doLogout(); });
 $('#logsBtn').addEventListener('click',openLogs);
 $('#pwBtn').addEventListener('click',()=>openChpw(false));
+$('#lgChpwBtn').addEventListener('click',()=>{
+  const id=$('#lgId').value.trim();
+  if(!id){ $('#lgErr').textContent='아이디를 먼저 입력하세요'; return; }
+  openChpw(false,id);
+});
 $('#pwSubmit').addEventListener('click',submitChpw);
 $('#pwCancel').addEventListener('click',closeChpw);
 $('#pwNew2').addEventListener('keydown',e=>{ if(e.key==='Enter') submitChpw(); });
