@@ -456,7 +456,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v55</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v56</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -702,13 +702,13 @@ const CONSULT_GROUP={
 };
 // 그룹별 선택지 (유리두께/외측/내측/색상/간봉/잠금/방충망/옵션)
 const CONSULT_OPTS={
-  G2:{thick:['26T','28T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들','전용핸들'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','방충망핸들','윈드가드','아르곤가스']},
-  G3:{thick:['22T','24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
-  FIX:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:[],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
-  TD:{door:['미는문','당기는문'],thick:['24T'],outer:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],screen:[],opts:['없음','아르곤가스']},
-  PJ:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],screen:['없음','롤방충망'],opts:['없음','아르곤가스']}
+  G2:{thick:['26T','28T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들','전용핸들'],handle:['없음','400','450','500'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','방충망핸들','윈드가드','아르곤가스']},
+  G3:{thick:['22T','24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들'],handle:['없음','400','450','500'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
+  FIX:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:[],handle:['없음','400','450','500'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
+  TD:{door:['미는문','당기는문'],thick:['24T'],outer:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],handle:['없음','400','450','500'],screen:[],opts:['없음','아르곤가스']},
+  PJ:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],handle:['없음','400','450','500'],screen:['없음','롤방충망'],opts:['없음','아르곤가스']}
 };
-const SPEC_LABELS={door:'문 방향',thick:'유리 두께',outer:'외측 유리사양',inner:'내측 유리사양',color:'유리 색상',gap:'간봉',lock:'잠금장치',screen:'방충망',opts:'추가옵션'};
+const SPEC_LABELS={door:'문 방향',thick:'유리 두께',outer:'외측 유리사양',inner:'내측 유리사양',color:'유리 색상',gap:'간봉',lock:'잠금장치',handle:'핸들 높이',screen:'방충망',opts:'추가옵션'};
 // 브랜드 (순서 = 라인업 배열 순서), coef=단가계수
 const BRANDS=[
   {id:'kcc_villaz',brand:'KCC홈씨씨완성창',line:'HW_ONE 빌라즈',coef:110, brandFull:'KCC글라스완성창', lineFull:'HW_ONE (빌라즈)'},
@@ -766,7 +766,7 @@ function shapeLabel(id){ const s=SHAPES.find(x=>x.id===id); return s?s.label:id;
 
 let device=null, characteristic=null, windows=[], current=blankWindow(), activeId=null;
 let siteName='', custPhone='', siteAddr='', siteBuilding='', siteDetail='', sessionId=null, editingIndex=null;
-function blankWindow(){ return {photo:null,location:'',product:'',shape:'2W',side:'좌',data:{},w:null,h:null,v:null,glass:'',colorIn:'',colorOut:'',options:[],tongba:{top:[],bottom:[],left:[],right:[]},frame:'',brand:'',spec:{thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',screen:'',opts:[],door:''}}; }
+function blankWindow(){ return {photo:null,location:'',product:'',shape:'2W',side:'좌',data:{},w:null,h:null,v:null,glass:'',colorIn:'',colorOut:'',options:[],tongba:{top:[],bottom:[],left:[],right:[]},frame:'',brand:'',spec:{thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',handle:'',screen:'',opts:[],door:''}}; }
 const $=s=>document.querySelector(s);
 
 /* ===== 기기 저장소 (localStorage) ===== */
@@ -1207,8 +1207,8 @@ function writeBody(w,i){
     ${sizeEditor(w,i)}
     <div class="c-dia-wrap">${winDiagramSVG(w)}</div>
     ${tongbaSection(w,i)}
-    <div class="c-secthead">유리 색상</div>
-    <div class="c-specwrap">${specSection(w,i,['color'])}</div>
+    <div class="c-secthead">핸들 높이 · 유리 색상</div>
+    <div class="c-specwrap">${specSection(w,i,['handle','color'])}</div>
     <button class="c-del" data-wdel="${i}">🗑 이 창 삭제</button>
   </div>`;
 }
@@ -1237,8 +1237,15 @@ $('#writeList').addEventListener('click',e=>{
   const cel=e.target.closest('[data-ci]'); if(!cel)return; const i=+cel.dataset.ci; const w=windows[i]; if(!w)return;
   const cs=e.target.closest('[data-csize]');
   if(cs){ openKeypad(cs.dataset.csize, i); return; }
+  const hc=e.target.closest('[data-hcustom]');
+  if(hc){ const cur=(w.spec&&w.spec.handle)||'450';
+    const v=prompt('핸들 높이를 입력하세요 (바닥에서 mm)', /^[0-9]+$/.test(String(cur))?cur:'450');
+    if(v!==null){ const n=parseInt(String(v).replace(/[^0-9]/g,''));
+      if(n>0){ w.spec=w.spec||{}; w.spec.handle=String(n); renderWrite(); autosave(); }
+      else toast('숫자를 입력하세요'); }
+    return; }
   const pc=e.target.closest('[data-prodc]');
-  if(pc){ w.product=(w.product===pc.dataset.prodc)?'':pc.dataset.prodc; w.spec={thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',screen:'',opts:[],door:''}; renderWrite(); renderTray(); autosave(); return; }
+  if(pc){ w.product=(w.product===pc.dataset.prodc)?'':pc.dataset.prodc; w.spec={thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',handle:'',screen:'',opts:[],door:''}; renderWrite(); renderTray(); autosave(); return; }
   const sh=e.target.closest('[data-shapec]'),sd=e.target.closest('[data-sidec]'),sp=e.target.closest('[data-spec]');
   const tf=e.target.closest('[data-tface]'),tdel=e.target.closest('[data-tdel]'),fr=e.target.closest('[data-framec]');
   if(sh){ w.shape=sh.dataset.shapec; if(!(SHAPE_DEFS[w.shape]||{}).unbalanced && w.data) delete w.data['V']; }
@@ -1511,6 +1518,15 @@ function specSection(w,i,keys){
   if(!grp) return `<div class="tb-none">창 종류를 먼저 선택하세요</div>`;
   const O=CONSULT_OPTS[grp]; const sp=w.spec||{}; const dbl=isDoubleWin(w.product);
   const row=(key)=>{
+    if(key==='handle'){                                   // 핸들 높이 — 프리셋 + 직접입력
+      const cur=String(sp.handle||'');
+      const preset=['없음','400','450','500'];
+      const custom = cur && !preset.includes(cur);
+      let c=preset.map(o=>`<button class="spec-chip ${cur===o?'sel':''}" data-spec="handle" data-val="${o}" data-multi="0" data-ci="${i}">${o}</button>`).join('');
+      if(custom) c+=`<button class="spec-chip sel" data-spec="handle" data-val="${cur}" data-multi="0" data-ci="${i}">${cur}</button>`;
+      c+=`<button class="spec-chip" data-hcustom="1" data-ci="${i}">직접입력</button>`;
+      return `<div class="c-sub">${SPEC_LABELS.handle} <span style="font-weight:400;opacity:.7">(바닥에서 mm)</span></div><div class="spec-chips">${c}</div>`;
+    }
     let arr=O[key]; if(!arr||!arr.length) return '';
     if(key==='inner'&&!dbl) return '';                            // 단창은 내측 없음
     if(key==='lock'&&dbl) arr=arr.filter(x=>x!=='양방향핸들');   // 이중창 양방향핸들 불가
@@ -1523,7 +1539,7 @@ function specSection(w,i,keys){
     if(key==='opts') lbl += ' <span style="font-weight:400;opacity:.7">(복수 선택 가능)</span>';
     return `<div class="c-sub">${lbl}</div><div class="spec-chips">${chips}</div>`;
   };
-  return (keys||['door','thick','outer','inner','color','gap','lock','screen','opts']).map(row).join('');
+  return (keys||['door','thick','outer','inner','color','gap','lock','handle','screen','opts']).map(row).join('');
 }
 /* 상담탭에서 사이즈 직접 편집 (실측탭 안 가도 됨) */
 function sizeEditor(w,i){
@@ -1599,8 +1615,15 @@ $('#consultList').addEventListener('click',e=>{
   const cel=e.target.closest('[data-ci]'); if(!cel)return; const i=+cel.dataset.ci; const w=windows[i]; if(!w)return;
   const cs=e.target.closest('[data-csize]');
   if(cs){ openKeypad(cs.dataset.csize, i); return; }                  // 상담탭 사이즈 수정
+  const hc=e.target.closest('[data-hcustom]');
+  if(hc){ const cur=(w.spec&&w.spec.handle)||'450';
+    const v=prompt('핸들 높이를 입력하세요 (바닥에서 mm)', /^[0-9]+$/.test(String(cur))?cur:'450');
+    if(v!==null){ const n=parseInt(String(v).replace(/[^0-9]/g,''));
+      if(n>0){ w.spec=w.spec||{}; w.spec.handle=String(n); renderConsult(); autosave(); }
+      else toast('숫자를 입력하세요'); }
+    return; }
   const pc=e.target.closest('[data-prodc]');
-  if(pc){ w.product=(w.product===pc.dataset.prodc)?'':pc.dataset.prodc; w.spec={thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',screen:'',opts:[],door:''}; renderConsult(); renderTray(); autosave(); return; }
+  if(pc){ w.product=(w.product===pc.dataset.prodc)?'':pc.dataset.prodc; w.spec={thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',handle:'',screen:'',opts:[],door:''}; renderConsult(); renderTray(); autosave(); return; }
   const sh=e.target.closest('[data-shapec]'),sd=e.target.closest('[data-sidec]');
   const tf=e.target.closest('[data-tface]'),tdel=e.target.closest('[data-tdel]'),fr=e.target.closest('[data-framec]');
   const sp=e.target.closest('[data-spec]');
@@ -1745,12 +1768,16 @@ function bigDiagramSVG(w){
   if(def.fix) s+=`<text x="${cx}" y="${fy+fh/2}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="20" font-weight="700" shape-rendering="auto">Fix</text>`;
   if(isMist||isMoru) s+=`<text x="${cx}" y="${fy+Math.min(20,fh*0.2)}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="13" font-weight="700" fill="${isMist?'#DC2626':'#0F766E'}" shape-rendering="auto">${sp.color}</text>`;
   const ym=fy+fh/2;
+  /* 핸들 높이 — auto.py: 바닥에서 h만큼 위에 빨간 점선 + 우측 바깥에 라벨 */
+  const hH=parseInt(sp.handle);
+  const hasHandleH = !isNaN(hH) && hH>0;
+  const handleY = hasHandleH ? Math.max(fy+2, Math.min(fy+fh-2, fy+fh-hH*S)) : null;
   const sym=(x,y,txt,size,col)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="${size||14}" font-weight="700" fill="${col||'#000'}" shape-rendering="auto">${txt}</text>`;
   const scr=(x,y)=>`<text x="${x}" y="${y}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="12" font-weight="700" fill="#DC2626" shape-rendering="auto">#(망)</text>`;
   const vtxt=(x,y)=>('V' in w.data)?`<text x="${x}" y="${y}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="13" font-weight="700" fill="#DC2626" shape-rendering="auto">${w.data['V']}</text>`:'';
   if(def.handle){                                       // 터닝도어: 핸들 모양 + 문 방향
     const hx = w.side==='좌' ? fx+8 : fx+fw-8;
-    s+=doorHandle(hx,ym,w.side);
+    s+=doorHandle(hx, hasHandleH?handleY:ym, w.side);     // 핸들높이 지정 시 그 위치에
     if(sp.door) s+=`<text x="${cx}" y="${fy+fh+13}" text-anchor="middle" font-family="${"'Malgun Gothic','맑은 고딕',sans-serif"}" font-size="11" font-weight="700" fill="#111" shape-rendering="auto">${sp.door} / ${w.side}핸들</text>`;
   } else if(w.shape==='3W'||w.shape==='3WU'){           // 3W/3WU: 좌=▶, 우=◀ (텍스트 없음)
     const r=(w.shape==='3WU')?ubRatio(w):0.25;
@@ -1768,6 +1795,12 @@ function bigDiagramSVG(w){
     s+=vtxt(vcx,ym+18);
   } else if(hasScreen && !def.fix){
     s+=scr(cx,fy+14);
+  }
+  // 핸들 높이 점선 · 라벨 (터닝도어는 핸들 모양으로 이미 표시)
+  if(hasHandleH && !def.handle){
+    const rightTB=(t.right||[]).reduce((a,e)=>a+tw(tbEid(e)),0);
+    s+=`<line x1="${fx}" y1="${handleY}" x2="${fx+fw}" y2="${handleY}" stroke="#DC2626" stroke-width="0.9" stroke-dasharray="5,3" opacity="0.75" shape-rendering="auto"/>`;
+    s+=`<text x="${fx+fw+rightTB+5}" y="${handleY}" dominant-baseline="middle" font-family="${"'Malgun Gothic','맑은 고딕',sans-serif"}" font-size="9" font-weight="700" fill="#DC2626" shape-rendering="auto">핸들 ${hH}</text>`;
   }
   // 사이즈 (파랑, 순치수) — 도면 하단 고정
   const hasDed=(ded.W||ded.H);
