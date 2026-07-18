@@ -338,6 +338,9 @@
   #drawMeasSheet{margin-top:8px}
   #drawMeasSheet .dw-grid{grid-template-columns:1fr;gap:12px}
   .dw-meas-note{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin:10px 0 2px;line-height:1.6}
+  .meas-toolbar{display:flex;gap:8px;margin-top:12px}
+  .meas-toolbar button{flex:1;font-family:var(--sans);font-size:13px;font-weight:600;padding:12px 8px;border-radius:12px;border:none;background:var(--surface);color:var(--ink-2);box-shadow:var(--shadow)}
+  .meas-toolbar button:active{background:var(--surface-2)}
   #drawMeasSheet .dw-svg svg{width:100%;height:auto;display:block}
   #drawMeasSheet .dw-card{padding:12px 10px 10px}
   .ml-txt{flex:1;min-width:0}
@@ -408,7 +411,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v48</b></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v49</b></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -499,6 +502,10 @@
 </div>
 
 <div id="drawMeasTab" style="display:none">
+  <div class="meas-toolbar dw-noprint">
+    <button id="measPrintBtn">🖨 출력 · PDF</button>
+    <button id="measPngBtn">🖼 PNG 저장</button>
+  </div>
   <div id="drawMeasSheet"></div>
 </div>
 
@@ -513,7 +520,6 @@
   <button class="finish" id="writeNextBtn" style="flex:1">실측도면 확인 →</button>
 </div>
 <div class="inner" id="measDrawBar" style="display:none">
-  <button class="next" id="measPrintBtn">🖨 출력</button>
   <button class="next" id="toConsultBtn">고객상담 →</button>
   <button class="finish" id="sendKakaoBtn">📤 실측파일 보내기</button>
 </div>
@@ -1029,7 +1035,7 @@ function renderMeasDraw(){
   box.innerHTML=`<div class="dw-headerbar">현장: ${place||'—'} &nbsp;|&nbsp; 고객: ${siteName||'—'}${custPhone?' ('+custPhone+')':''} &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; 총 ${windows.length}창 &nbsp;|&nbsp; 스케일 1:${ratio}</div>
     <div class="dw-grid">${windows.map((w,i)=>drawCard(w,i)+frameCard(w,i)).join('')}${tongbaSummary()}</div>
     <div class="dw-slogan">◎ 도면에 표기된 치수(사이즈)는 통바 제외한 창호 사이즈 입니다.</div>
-    <div class="dw-meas-note">[🖨 출력]을 누르면 최종도면과 동일한 A3 도면 · PDF · PNG로 출력됩니다</div>`;
+    <div class="dw-meas-note dw-noprint">[🖨 출력·PDF]는 최종도면과 동일한 A3 출력 · [🖼 PNG 저장]은 이 도면을 이미지로 저장/공유</div>`;
 }
 function downloadBlob(blob,fname){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
@@ -1087,6 +1093,33 @@ $('#importFileInput').addEventListener('change',e=>{ const f=e.target.files&&e.t
 $('#writeNextBtn').addEventListener('click',()=>{ if(!windows.length){ toast('작성할 창이 없어요'); return; } switchTab('measDraw'); });
 $('#toConsultBtn').addEventListener('click',()=>switchTab('consult'));
 $('#measPrintBtn').addEventListener('click',openDrawing);   // 최종도면과 동일한 출력
+/* 실측도면 PNG — 모바일에선 공유 시트(카톡)로, 안 되면 저장 */
+async function exportMeasPNG(){
+  if(!windows.length){ toast('출력할 창이 없어요'); return; }
+  const root=$('#drawMeasSheet');
+  if(typeof html2canvas==='undefined'){ toast('PNG 라이브러리 로딩 중 — 잠시 후 다시'); return; }
+  toast('실측도면 PNG 생성 중…');
+  try{
+    const canvas=await html2canvas(root,{
+      scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false,
+      windowWidth:root.scrollWidth, windowHeight:root.scrollHeight,
+      ignoreElements:(el)=>el.classList && el.classList.contains('dw-noprint')
+    });
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    if(!blob){ toast('PNG 생성 실패'); return; }
+    const fname=fileBase()+'_실측도면.png';
+    const file=new File([blob],fname,{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:'현장 실측도면',text:sendCaption()}); toast('공유 시트에서 카카오톡을 선택하세요'); return; }
+      catch(e){ if(e.name==='AbortError') return; }
+    }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    toast('실측도면 PNG 저장 완료 ✓');
+  }catch(e){ console.error(e); toast('PNG 실패 — [출력·PDF]를 사용하세요'); }
+}
+$('#measPngBtn').addEventListener('click',exportMeasPNG);
 
 /* ===== 상담 탭 렌더 ===== */
 function specSummary(w){
