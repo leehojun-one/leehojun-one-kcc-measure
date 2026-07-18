@@ -308,20 +308,20 @@
   .dw-exports button{font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:9px;border:none;background:var(--ink);color:#fff}
   .dw-exports button:active{opacity:.85}
   /* 줌 — 카드가 커지고, 텍스트는 카드 폭에 비례 (SVG와 밸런스 유지) */
-  #drawSheet{--dwzoom:1; --dwcard:220px}
-  #drawSheet .dw-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(calc(var(--dwcard) * var(--dwzoom)), 1fr));gap:8px;align-items:start}
-  #drawSheet .dw-card{width:100%;container-type:inline-size;padding:7px 6px 6px}
-  #drawSheet .dw-svg svg{width:100%;height:auto;display:block}
+  #drawSheet, #drawMeasSheet{--dwzoom:1; --dwcard:220px}
+  #drawSheet .dw-grid, #drawMeasSheet .dw-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(calc(var(--dwcard) * var(--dwzoom)), 1fr));gap:8px;align-items:start}
+  #drawSheet .dw-card, #drawMeasSheet .dw-card{width:100%;container-type:inline-size;padding:7px 6px 6px}
+  #drawSheet .dw-svg svg, #drawMeasSheet .dw-svg svg{width:100%;height:auto;display:block}
   /* 카드 폭 대비 비율 — SVG 텍스트와 동일 스케일감 */
-  #drawSheet .dw-title{font-size:5.4cqw;line-height:1.25;min-height:0}     /* 1순위: 설치위치 */
-  #drawSheet .dw-title span{font-size:3.6cqw;font-weight:500}               /* 제품/형태 (보조) */
-  #drawSheet .dw-glass{font-size:3.8cqw;margin-top:1px}                     /* 유리사양 (보조) */
-  #drawSheet .dw-tags{gap:2px;margin-top:2px}
-  #drawSheet .dw-tag{font-size:3.2cqw;padding:1px 3px;border-radius:3px}    /* 옵션 (최소) */
-  #drawSheet .tsum-h{font-size:4.4cqw}
-  #drawSheet .tsum-table{font-size:3.8cqw}
-  #drawSheet .tsum-grand{font-size:4cqw;padding:4px}
-  #drawSheet .tsum-code{font-size:3.2cqw}
+  #drawSheet .dw-title, #drawMeasSheet .dw-title{font-size:5.4cqw;line-height:1.25;min-height:0}     /* 1순위: 설치위치 */
+  #drawSheet .dw-title span, #drawMeasSheet .dw-title span{font-size:3.6cqw;font-weight:500}               /* 제품/형태 (보조) */
+  #drawSheet .dw-glass, #drawMeasSheet .dw-glass{font-size:3.8cqw;margin-top:1px}                     /* 유리사양 (보조) */
+  #drawSheet .dw-tags, #drawMeasSheet .dw-tags{gap:2px;margin-top:2px}
+  #drawSheet .dw-tag, #drawMeasSheet .dw-tag{font-size:3.2cqw;padding:1px 3px;border-radius:3px}    /* 옵션 (최소) */
+  #drawSheet .tsum-h, #drawMeasSheet .tsum-h{font-size:4.4cqw}
+  #drawSheet .tsum-table, #drawMeasSheet .tsum-table{font-size:3.8cqw}
+  #drawSheet .tsum-grand, #drawMeasSheet .tsum-grand{font-size:4cqw;padding:4px}
+  #drawSheet .tsum-code, #drawMeasSheet .tsum-code{font-size:3.2cqw}
   .dw-slogan{margin-top:16px;padding:12px;background:#fff;border:1px dashed #bbb;border-radius:0;font-family:var(--sans);font-size:11px;font-weight:600;color:#C0392B;text-align:center;line-height:1.6}
   @page{size:A3 landscape;margin:8mm}
   @media print {
@@ -334,15 +334,13 @@
     .dw-card{border-color:#999}
     .q-cond{display:none !important}
   }
-  /* 실측도면 확인 (인라인, 한 줄에 한 창) */
-  #drawMeasSheet{margin-top:8px}
-  #drawMeasSheet .dw-grid{grid-template-columns:1fr;gap:12px}
+  /* 실측도면 확인 — 최종도면과 동일 레이아웃 (인라인) */
+  #drawMeasSheet{margin-top:10px;background:#EEF1F1;padding:12px;border-radius:14px}
   .dw-meas-note{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin:10px 0 2px;line-height:1.6}
   .meas-toolbar{display:flex;gap:8px;margin-top:12px}
   .meas-toolbar button{flex:1;font-family:var(--sans);font-size:13px;font-weight:600;padding:12px 8px;border-radius:12px;border:none;background:var(--surface);color:var(--ink-2);box-shadow:var(--shadow)}
   .meas-toolbar button:active{background:var(--surface-2)}
-  #drawMeasSheet .dw-svg svg{width:100%;height:auto;display:block}
-  #drawMeasSheet .dw-card{padding:12px 10px 10px}
+
   .ml-txt{flex:1;min-width:0}
   .ml-txt b{font-size:13px;font-weight:600}
   .ml-txt span{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -411,7 +409,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v49</b></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v51</b></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -629,11 +627,11 @@ const CONSULT_GROUP={
 };
 // 그룹별 선택지 (유리두께/외측/내측/색상/간봉/잠금/방충망/옵션)
 const CONSULT_OPTS={
-  G2:{thick:['26T','28T'],outer:['투명+투명','투명+로이','더블로이+투명'],inner:['투명+투명','투명+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들','전용핸들'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','방충망핸들','윈드가드','아르곤가스']},
-  G3:{thick:['22T','24T'],outer:['투명+투명','투명+로이','더블로이+투명'],inner:['투명+투명','투명+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
-  FIX:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:[],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
-  TD:{door:['미는문','당기는문'],thick:['24T'],outer:['투명+투명','투명+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],screen:[],opts:['없음','아르곤가스']},
-  PJ:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],screen:['없음','롤방충망'],opts:['없음','아르곤가스']}
+  G2:{thick:['26T','28T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들','전용핸들'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','방충망핸들','윈드가드','아르곤가스']},
+  G3:{thick:['22T','24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['자동핸들','크리센트','수동핸들','양방향핸들'],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
+  FIX:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:[],screen:['없음','AL','S/ST(BL)','안전망'],opts:['없음','아르곤가스']},
+  TD:{door:['미는문','당기는문'],thick:['24T'],outer:['투명+투명','투명+로이','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],screen:[],opts:['없음','아르곤가스']},
+  PJ:{thick:['24T'],outer:['투명+투명','투명+로이','더블로이+투명','미스트+투명','미스트+로이','모루+투명','모루+로이'],inner:[],color:['투명','미스트','모루'],gap:['일반AL','단열간봉'],lock:['전용핸들'],screen:['없음','롤방충망'],opts:['없음','아르곤가스']}
 };
 const SPEC_LABELS={door:'문 방향',thick:'유리 두께',outer:'외측 유리사양',inner:'내측 유리사양',color:'유리 색상',gap:'간봉',lock:'잠금장치',screen:'방충망',opts:'추가옵션'};
 // 브랜드 (순서 = 라인업 배열 순서), coef=단가계수
@@ -1355,7 +1353,8 @@ function bigDiagramSVG(w){
   const fy=DW_VIEW.top+MAXTB;
   const def=SHAPE_DEFS[w.shape]||{}; const sp=w.spec||{};
   const hasScreen=!!(sp.screen&&sp.screen!=='없음');
-  const isMist=(sp.color==='미스트'), isMoru=(sp.color==='모루');
+  const gComb=`${sp.outer||''}${sp.inner||''}${sp.color||''}`;   // auto.py: glass_in + glass_out 합쳐서 판정
+  const isMist=gComb.includes('미스트'), isMoru=gComb.includes('모루');
   let s=`__SVGOPEN__${glassHatchDefs()}`;
   const t=w.tongba||{};
   const band=(x,y,ww,hh,col)=>`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" fill="${col}" stroke="#000" stroke-width="1.2"/>`;
