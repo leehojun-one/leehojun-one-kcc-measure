@@ -68,10 +68,10 @@
   .spec-chip.opt.sel{background:var(--brand);border-color:var(--brand)}
 
   /* 탭 바 */
-  .tabbar{display:flex;gap:4px;padding:5px;margin:11px 2px 2px;background:rgba(255,255,255,.7);border-radius:16px}
-  .tabbar button{flex:1;font-size:11px;font-weight:600;padding:11px 2px;border-radius:11px;border:none;background:transparent;color:var(--muted);white-space:nowrap;letter-spacing:-.03em}
-  .tabbar button.sel{background:var(--surface);color:var(--brand);box-shadow:0 2px 8px -2px rgba(27,37,89,.14)}
-  .tabbar button.sel .cnt{color:var(--brand);font-weight:600}
+  .tabbar{display:flex;gap:4px;padding:5px;margin:11px 2px 2px;background:rgba(226,232,240,.85);border-radius:16px}
+  .tabbar button{flex:1;font-size:11px;font-weight:600;padding:11px 2px;border-radius:11px;border:none;background:transparent;color:var(--ink-2);white-space:nowrap;letter-spacing:-.03em;transition:background .15s,color .15s}
+  .tabbar button.sel{background:var(--brand);color:#fff;font-weight:700;box-shadow:0 3px 10px -2px rgba(27,37,89,.45)}
+  .tabbar button.sel .cnt{color:#fff;opacity:.9;font-weight:700}
   .tabbar button .cnt{font-family:var(--mono);font-size:11px;opacity:.7;margin-left:4px}
 
   /* 상담 카드 */
@@ -337,6 +337,7 @@
   /* 실측도면 확인 (인라인, 한 줄에 한 창) */
   #drawMeasSheet{margin-top:8px}
   #drawMeasSheet .dw-grid{grid-template-columns:1fr;gap:12px}
+  .dw-meas-note{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin:10px 0 2px;line-height:1.6}
   #drawMeasSheet .dw-svg svg{width:100%;height:auto;display:block}
   #drawMeasSheet .dw-card{padding:12px 10px 10px}
   .ml-txt{flex:1;min-width:0}
@@ -399,44 +400,6 @@
   .logbody{border-top:1px solid var(--hair);max-height:150px;overflow-y:auto;background:#0E1113}
   .logbody pre{font-family:var(--mono);font-size:10px;line-height:1.7;color:#9BE7C4;padding:10px 13px;white-space:pre-wrap;word-break:break-all}
 
-  /* ===== PC(넓은 화면) 전용 — 2단 배치 · 스크롤 최소화 · 가독성 =====
-     980px 미만(모바일·태블릿)은 기존 레이아웃 그대로 유지 */
-  @media screen and (min-width:980px){
-    body{max-width:1180px; padding-bottom:calc(env(safe-area-inset-bottom) + 118px)}
-    .actionbar .inner{max-width:1180px}
-    .kp-sheet, .sheet{max-width:620px}
-
-    /* 실측 탭 2단 */
-    .pc-cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); gap:18px; align-items:start}
-    .pc-col-b{position:sticky; top:12px}
-    .pc-cols .card{margin-top:0; margin-bottom:14px}
-
-    /* 가독성 — 글자·터치영역 키우기 */
-    .card{padding:22px 20px}
-    .step-h h2{font-size:17px}
-    .loc-chips button, .spec-chips button{font-size:14px; padding:11px 15px}
-    .loc-input, .site-input{font-size:15px; padding:13px 15px}
-    .size-box .sv{font-size:34px}
-    .size-box label{font-size:12.5px}
-    .size-meta{font-size:12px}
-    .tabbar button{font-size:14px; padding:13px 6px; letter-spacing:0}
-    .toolbar-top button{font-size:13.5px; padding:13px 10px}
-    .confirm-next{font-size:16px; padding:15px}
-    .actionbar button{font-size:16px; padding:16px}
-    .diagram{max-height:none}
-
-    /* 상담·실측작성 카드도 넓게 2단 */
-    #consultList, #writeList{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start}
-    #consultList .c-card, #writeList .c-card{margin-top:0}
-    #consultList .c-card.open, #writeList .c-card.open{grid-column:1 / -1}
-
-    /* 실측도면 확인 — 2단 */
-    #drawMeasSheet .dw-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  }
-  @media screen and (min-width:1320px){
-    body{max-width:1320px}
-    .actionbar .inner{max-width:1320px}
-  }
 </style>
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -480,8 +443,6 @@
   <p>레이저 측정기 연결은 <code>안드로이드 크롬</code>에서만 돼요. 이 환경에선 측정값을 <b>직접 입력</b>(사이즈칸 길게누르기·더블클릭)으로 채우면 나머지 기능은 그대로 작동합니다.</p>
 </div>
 
-<div class="pc-cols">
-<div class="pc-col-a">
 <!-- 1 위치 -->
 <div class="card">
   <div class="step-h"><span class="step-n">1</span><h2>설치 위치</h2><span class="opt" id="locOpt"></span></div>
@@ -505,8 +466,6 @@
   </div>
 </div>
 
-</div><!-- /pc-col-a -->
-<div class="pc-col-b">
 <!-- 4 실측 + 확정 사이즈 -->
 <div class="card">
   <div class="step-h"><span class="step-n">4</span><h2>6포인트 실측</h2><span class="opt" id="measOpt">0 / 6</span></div>
@@ -528,8 +487,6 @@
   <div class="step-h"><span class="step-n">5</span><h2>실측 목록</h2><span class="opt" id="measListCnt"></span></div>
   <div id="measList"></div>
 </div>
-</div><!-- /pc-col-b -->
-</div><!-- /pc-cols -->
 
 </div><!-- /measureTab -->
 
@@ -556,6 +513,7 @@
   <button class="finish" id="writeNextBtn" style="flex:1">실측도면 확인 →</button>
 </div>
 <div class="inner" id="measDrawBar" style="display:none">
+  <button class="next" id="measPrintBtn">🖨 출력</button>
   <button class="next" id="toConsultBtn">고객상담 →</button>
   <button class="finish" id="sendKakaoBtn">📤 실측파일 보내기</button>
 </div>
@@ -1062,9 +1020,13 @@ function renderMeasDraw(){
   if(!windows.length){ box.innerHTML='<div class="c-empty">실측된 창이 없어요<br>먼저 실측 탭에서 측정하세요</div>'; return; }
   computeDrawScale();
   if(typeof computeCommonOptions==='function') computeCommonOptions();
+  const today=new Date().toLocaleDateString('ko-KR');
   const place=[siteBuilding||siteAddr,siteDetail].filter(Boolean).join(' ');
-  box.innerHTML=`<div class="dw-headerbar">${place||siteName||'현장'} · 실측 도면 확인 · 총 ${windows.length}창</div>
-    <div class="dw-grid">${windows.map((w,i)=>drawCard(w,i)+frameCard(w,i)).join('')}</div>`;
+  const ratio=Math.round(1/(DRAW_SCALE*3.7795));
+  box.innerHTML=`<div class="dw-headerbar">현장: ${place||'—'} &nbsp;|&nbsp; 고객: ${siteName||'—'}${custPhone?' ('+custPhone+')':''} &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; 총 ${windows.length}창 &nbsp;|&nbsp; 스케일 1:${ratio}</div>
+    <div class="dw-grid">${windows.map((w,i)=>drawCard(w,i)+frameCard(w,i)).join('')}${tongbaSummary()}</div>
+    <div class="dw-slogan">◎ 도면에 표기된 치수(사이즈)는 통바 제외한 창호 사이즈 입니다.</div>
+    <div class="dw-meas-note">[🖨 출력]을 누르면 최종도면과 동일한 A3 도면 · PDF · PNG로 출력됩니다</div>`;
 }
 function downloadBlob(blob,fname){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
@@ -1121,6 +1083,7 @@ $('#importBtn').addEventListener('click',()=>$('#importFileInput').click());
 $('#importFileInput').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; importSessionFile(f); e.target.value=''; });
 $('#writeNextBtn').addEventListener('click',()=>{ if(!windows.length){ toast('작성할 창이 없어요'); return; } switchTab('measDraw'); });
 $('#toConsultBtn').addEventListener('click',()=>switchTab('consult'));
+$('#measPrintBtn').addEventListener('click',openDrawing);   // 최종도면과 동일한 출력
 
 /* ===== 상담 탭 렌더 ===== */
 function specSummary(w){
