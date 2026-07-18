@@ -408,7 +408,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측</div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v48</b></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -608,6 +608,9 @@ const TONGBA={
   CB45 :{label:'CB45', code:'CB-45*45',  color:'#00FFFF',tcol:'#001F66',deduct:45, thick:60, scale:1.5},
   CB135:{label:'CB135',code:'CB-135',    color:'#FF00FF',tcol:'#001F66',deduct:0,  thick:60, scale:1.4}
 };
+/* 통바 엔트리: 'CB100'(1겹) 또는 {id:'CB100',d:2}(앞뒤 2겹) — 겹은 폭을 더 먹지 않음 */
+const tbEid=e=>(typeof e==='string'?e:(e&&e.id));
+const tbEd =e=>(typeof e==='string'?1:Math.max(1,(e&&e.d)||1));
 function tbDrawMM(id){ const t=TONGBA[id]; return t? t.thick*t.scale*TB_W : 0; }   // 도면상 mm 폭
 const FRAMES=['CB90 ㅁ자공틀','CB90 ㄷ자공틀','CB45 ㅁ자공틀','CB45 ㄷ자공틀'];
 
@@ -651,7 +654,7 @@ const LINEUP={
 let selTongba='CB100';
 let tbQty=1;   // 통바 수량 (기본 1, 붙인 뒤 1로 자동 회귀)
 function tongbaDeduct(w){
-  const t=w.tongba||{}; const sum=a=>(a||[]).reduce((s,id)=>s+(TONGBA[id]?TONGBA[id].deduct:0),0);
+  const t=w.tongba||{}; const sum=a=>(a||[]).reduce((s,e)=>{const id=tbEid(e); return s+(TONGBA[id]?TONGBA[id].deduct:0);},0);   // 겹수는 공제에 영향 없음
   return { W:sum(t.left)+sum(t.right), H:sum(t.top)+sum(t.bottom) };
 }
 
@@ -1008,7 +1011,7 @@ $('#writeList').addEventListener('click',e=>{
     else w.spec[key]=(w.spec[key]===val)?'':val;
   }
   else if(tf){ w.tongba=w.tongba||{top:[],bottom:[],left:[],right:[]}; const arr=(w.tongba[tf.dataset.tface]=w.tongba[tf.dataset.tface]||[]);
-    for(let k=0;k<tbQty;k++) arr.push(selTongba); tbQty=1; }   // 수량만큼 붙이고 기본값 1로 회귀
+    arr.push(tbQty>1?{id:selTongba,d:tbQty}:selTongba); tbQty=1; }   // 통바 1개(앞뒤 tbQty겹) 추가 후 겹수 1로 회귀
   else if(tdel){ const [f,idx]=tdel.dataset.tdel.split(':'); if(w.tongba&&w.tongba[f]) w.tongba[f].splice(+idx,1); }
   else if(fr){ w.frame=(w.frame===fr.dataset.framec)?'':fr.dataset.framec; }
   else return;
@@ -1155,11 +1158,11 @@ function consultBody(w,i){
 function tongbaSection(w,i){
   const types=Object.keys(TONGBA).map(k=>`<button class="tb-type ${selTongba===k?'sel':''}" data-tsel="${k}" style="--tbc:${TONGBA[k].color}">${TONGBA[k].label}</button>`).join('');
   const faces=[['left','◀ 좌'],['right','▶ 우'],['top','▲ 상'],['bottom','▼ 하']].map(([f,l])=>`<button class="tb-face" data-tface="${f}" data-ci="${i}">${l}</button>`).join('');
-  const qty=`<span class="tb-qty"><span>수량</span><button data-tqty="-" data-ci="${i}">−</button><b class="${tbQty>1?'on':''}">${tbQty}</b><button data-tqty="+" data-ci="${i}">+</button></span>`;
+  const qty=`<span class="tb-qty"><span title="앞뒤로 겹쳐 붙는 통바 수 (전면에서 안 보임)">겹수</span><button data-tqty="-" data-ci="${i}">−</button><b class="${tbQty>1?'on':''}">${tbQty}</b><button data-tqty="+" data-ci="${i}">+</button></span>`;
   const t=w.tongba||{top:[],bottom:[],left:[],right:[]};
   const faceKor={top:'상',bottom:'하',left:'좌',right:'우'};
-  const list=['top','bottom','left','right'].flatMap(f=>(t[f]||[]).map((id,idx)=>({f,id,idx})));
-  const chips=list.length? list.map(x=>`<span class="tb-chip" style="--tbc:${TONGBA[x.id].color}">${faceKor[x.f]} ${TONGBA[x.id].label}<button data-tdel="${x.f}:${x.idx}" data-ci="${i}">×</button></span>`).join('') : '<span class="tb-none">붙은 통바 없음</span>';
+  const list=['left','right','top','bottom'].flatMap(f=>(t[f]||[]).map((e,idx)=>({f,id:tbEid(e),d:tbEd(e),idx})));
+  const chips=list.length? list.map(x=>`<span class="tb-chip" style="--tbc:${TONGBA[x.id].color}">${faceKor[x.f]} ${TONGBA[x.id].label}${x.d>1?`<b style="color:var(--alert)">×${x.d}</b>`:''}<button data-tdel="${x.f}:${x.idx}" data-ci="${i}">×</button></span>`).join('') : '<span class="tb-none">붙은 통바 없음</span>';
   const ded=tongbaDeduct(w);
   const dedTxt = (ded.W||ded.H)? `공제 W−${ded.W} / H−${ded.H} → 창호 ${(w.w||0)-ded.W} × ${(w.h||0)-ded.H}` : '통바 공제 없음';
   const frames=FRAMES.map(f=>`<button class="spec-chip ${w.frame===f?'sel':''}" data-framec="${f}" data-ci="${i}">${f}</button>`).join('');
@@ -1177,7 +1180,7 @@ function winDiagramSVG(w){
   const ded=tongbaDeduct(w);
   const nw=Math.max(600,(w.w||1000)-ded.W), nh=Math.max(600,(w.h||1000)-ded.H);
   const t=w.tongba||{};
-  const sumMM=(arr)=>(arr||[]).reduce((s,id)=>s+tbDrawMM(id),0);
+  const sumMM=(arr)=>(arr||[]).reduce((s,e)=>s+tbDrawMM(tbEid(e)),0);
   const extraW=sumMM(t.left)+sumMM(t.right);      // 통바가 좌우로 삐져나가는 mm
   const extraH=sumMM(t.top)+sumMM(t.bottom);
   // 통바까지 포함한 전체가 영역 안에 들어오도록
@@ -1218,7 +1221,7 @@ $('#consultList').addEventListener('click',e=>{
     else w.spec[key]=(w.spec[key]===val)?'':val;                        // 단일 선택
   }
   else if(tf){ w.tongba=w.tongba||{top:[],bottom:[],left:[],right:[]}; const arr=(w.tongba[tf.dataset.tface]=w.tongba[tf.dataset.tface]||[]);
-    for(let k=0;k<tbQty;k++) arr.push(selTongba); tbQty=1; }   // 수량만큼 붙이고 기본값 1로 회귀
+    arr.push(tbQty>1?{id:selTongba,d:tbQty}:selTongba); tbQty=1; }   // 통바 1개(앞뒤 tbQty겹) 추가 후 겹수 1로 회귀
   else if(tdel){ const [f,idx]=tdel.dataset.tdel.split(':'); if(w.tongba&&w.tongba[f]) w.tongba[f].splice(+idx,1); }
   else if(fr){ w.frame=(w.frame===fr.dataset.framec)?'':fr.dataset.framec; }
   else return;
@@ -1250,7 +1253,7 @@ function missingSpecs(w){
 let DRAW_SCALE=1;
 const DW_VIEW={w:340,h:258, availW:300, availH:198, top:10, cx:170};   // 도면 영역 (여백 최소화)
 function computeDrawScale(){
-  const sumMM=(arr)=>(arr||[]).reduce((s,id)=>s+tbDrawMM(id),0);
+  const sumMM=(arr)=>(arr||[]).reduce((s,e)=>s+tbDrawMM(tbEid(e)),0);
   const spanW=w=>{const t=w.tongba||{}; const d=tongbaDeduct(w); return Math.max(0,(w.w||0)-d.W)+sumMM(t.left)+sumMM(t.right);};
   const spanH=w=>{const t=w.tongba||{}; const d=tongbaDeduct(w); return Math.max(0,(w.h||0)-d.H)+sumMM(t.top)+sumMM(t.bottom);};
   const maxW=Math.max(2500, ...windows.map(spanW));
@@ -1326,21 +1329,16 @@ function bigDiagramSVG(w){
   const vlab=(x,y,txt,col)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="7" font-weight="700" fill="${col||'#000'}" transform="rotate(-90 ${x} ${y})" shape-rendering="auto">${txt}</text>`;
   const hlab=(x,y,txt,col)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="7" font-weight="700" fill="${col||'#000'}" shape-rendering="auto">${txt}</text>`;
   const tw=id=>Math.max(3,tbDrawMM(id)*S);
-  // 같은 통바가 연속으로 붙으면 묶어서 수량 표기 (×2 빨강)
-  const runs=arr=>{ const r=[]; (arr||[]).forEach(id=>{ const last=r[r.length-1]; if(last&&last.id===id) last.n++; else r.push({id,n:1}); }); return r; };
+  // 앞뒤 중첩(겹수)은 전면에서 안 보이므로 ×N(빨강)으로 표기 — 나란히 붙은 개수는 그림으로 보이니 표기 안 함
   const qlab=(x,y,n)=>n>1?`<text x="${x}" y="${y}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="9" font-weight="700" fill="#DC2626" shape-rendering="auto">×${n}</text>`:'';
-  let ox=fx; runs(t.left).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const x0=ox-v*g.n;
-    for(let k=0;k<g.n;k++){ const bx=ox-v*(k+1); s+=band(bx,fy,v,fh,tb.color); s+=vlab(bx+v/2,fy+fh/2,tb.code,tb.tcol); }
-    s+=qlab(x0+v*g.n/2, fy+fh+9, g.n); ox=x0; });
-  let oxr=fx+fw; runs(t.right).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const x0=oxr;
-    for(let k=0;k<g.n;k++){ s+=band(oxr,fy,v,fh,tb.color); s+=vlab(oxr+v/2,fy+fh/2,tb.code,tb.tcol); oxr+=v; }
-    s+=qlab(x0+v*g.n/2, fy+fh+9, g.n); });
-  let oy=fy; runs(t.top).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const y0=oy-v*g.n;
-    for(let k=0;k<g.n;k++){ const by=oy-v*(k+1); s+=band(fx,by,fw,v,tb.color); s+=hlab(fx+fw/2,by+v/2,tb.code,tb.tcol); }
-    s+=qlab(fx+fw/2+26, y0+v*g.n/2+3, g.n); oy=y0; });
-  let oyb=fy+fh; runs(t.bottom).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const y0=oyb;
-    for(let k=0;k<g.n;k++){ s+=band(fx,oyb,fw,v,tb.color); s+=hlab(fx+fw/2,oyb+v/2,tb.code,tb.tcol); oyb+=v; }
-    s+=qlab(fx+fw/2+26, y0+v*g.n/2+3, g.n); });
+  let ox=fx; (t.left||[]).forEach((e,k)=>{ const id=tbEid(e),tb=TONGBA[id],v=tw(id); ox-=v;
+    s+=band(ox,fy,v,fh,tb.color); s+=vlab(ox+v/2,fy+fh/2,tb.code,tb.tcol); s+=qlab(ox+v/2, fy+fh+9+(k%2)*9, tbEd(e)); });
+  let oxr=fx+fw; (t.right||[]).forEach((e,k)=>{ const id=tbEid(e),tb=TONGBA[id],v=tw(id);
+    s+=band(oxr,fy,v,fh,tb.color); s+=vlab(oxr+v/2,fy+fh/2,tb.code,tb.tcol); s+=qlab(oxr+v/2, fy+fh+9+(k%2)*9, tbEd(e)); oxr+=v; });
+  let oy=fy; (t.top||[]).forEach((e,k)=>{ const id=tbEid(e),tb=TONGBA[id],v=tw(id); oy-=v;
+    s+=band(fx,oy,fw,v,tb.color); s+=hlab(fx+fw/2,oy+v/2,tb.code,tb.tcol); s+=qlab(fx+fw/2+26, oy+v/2+3, tbEd(e)); });
+  let oyb=fy+fh; (t.bottom||[]).forEach((e,k)=>{ const id=tbEid(e),tb=TONGBA[id],v=tw(id);
+    s+=band(fx,oyb,fw,v,tb.color); s+=hlab(fx+fw/2,oyb+v/2,tb.code,tb.tcol); s+=qlab(fx+fw/2+26, oyb+v/2+3, tbEd(e)); oyb+=v; });
   // 유리면 (미스트 도트 / 모루 줄무늬)
   const glassFill = isMist?'url(#mistPat)' : isMoru?'url(#moruPat)' : '#fff';
   s+=`<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" fill="${glassFill}" stroke="#000" stroke-width="1.2"/>`;
@@ -1448,10 +1446,10 @@ function tongbaSummary(){
   const acc={};   // id → { length(mm) → count }
   windows.forEach(w=>{
     const t=w.tongba||{};
-    ['left','right'].forEach(f=>(t[f]||[]).forEach(id=>{
-      const L=w.h||0; acc[id]=acc[id]||{}; acc[id][L]=(acc[id][L]||0)+1; }));
-    ['top','bottom'].forEach(f=>(t[f]||[]).forEach(id=>{
-      const L=w.w||0; acc[id]=acc[id]||{}; acc[id][L]=(acc[id][L]||0)+1; }));
+    ['left','right'].forEach(f=>(t[f]||[]).forEach(e=>{
+      const id=tbEid(e), L=w.h||0; acc[id]=acc[id]||{}; acc[id][L]=(acc[id][L]||0)+tbEd(e); }));   // 겹수만큼 자재 수량 증가
+    ['top','bottom'].forEach(f=>(t[f]||[]).forEach(e=>{
+      const id=tbEid(e), L=w.w||0; acc[id]=acc[id]||{}; acc[id][L]=(acc[id][L]||0)+tbEd(e); }));
   });
   const ids=Object.keys(acc);
   if(!ids.length) return '';
