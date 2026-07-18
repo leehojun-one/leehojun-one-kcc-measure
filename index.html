@@ -458,7 +458,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v59</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v60</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -897,7 +897,14 @@ async function submitChpw(){
     const res=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'chpw',token:AUTH.token,oldPw,newPw,device:navigator.userAgent.slice(0,120)})});
     const j=await res.json();
-    if(!j.ok){ err.textContent=j.error||'변경 실패'; return; }
+    if(!j.ok){
+      if(j.error==='auth'){                     // 토큰 만료·서버 재배포 등 → 재로그인
+        err.textContent='로그인이 만료되었어요. 다시 로그인해 주세요.';
+        setTimeout(()=>{ pwForce=false; $('#pwOverlay').classList.remove('show'); doLogout(true); toast('다시 로그인해 주세요'); },1200);
+        return;
+      }
+      err.textContent=j.error||'변경 실패'; return;
+    }
     pwForce=false;
     $('#pwOverlay').classList.remove('show');
     toast('비밀번호가 변경되었습니다 ✓');
@@ -914,10 +921,24 @@ function doLogout(silent){
 function requireAuth(){
   if(!AUTH_URL) return true;                       // 개발 모드
   const a=LS.get('kcc_auth');
-  if(a && a.token && a.exp && a.exp>Date.now()){ AUTH=a; if(a.mustChange) setTimeout(()=>openChpw(true),600); return true; }
+  if(a && a.token && a.exp && a.exp>Date.now()){
+    AUTH=a;
+    verifySession().then(()=>{ if(AUTH && a.mustChange) openChpw(true); });
+    return true;
+  }
   LS.set('kcc_auth',null); AUTH=null;
   $('#loginGate').classList.add('show');
   return false;
+}
+/* 저장된 토큰이 서버에서 아직 유효한지 확인 (재배포·키변경 대비) */
+async function verifySession(){
+  if(!AUTH||!AUTH_URL) return;
+  try{
+    const res=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'log',token:AUTH.token,items:[{event:'session_check',detail:'세션 확인',ts:Date.now()}]})});
+    const j=await res.json();
+    if(j && j.error==='auth'){ doLogout(true); toast('로그인이 만료되었어요 — 다시 로그인해 주세요'); }
+  }catch(e){ /* 오프라인이면 그대로 사용 */ }
 }
 async function openLogs(){
   if(!isAdmin()||!AUTH_URL) return;
