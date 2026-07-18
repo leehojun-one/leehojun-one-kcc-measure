@@ -115,6 +115,11 @@
   .tb-chip button{border:none;background:none;color:var(--alert);font-weight:700;cursor:pointer;font-size:14px;padding:0 2px}
   .tb-none{font-family:var(--mono);font-size:11px;color:var(--muted)}
   .tb-ded{font-family:var(--mono);font-size:11px;color:var(--brand);font-weight:600}
+  .tb-qty{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--hair);border-radius:9px;padding:3px 5px}
+  .tb-qty>span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .tb-qty button{width:24px;height:24px;border:1px solid var(--hair);background:#fff;border-radius:7px;font-size:15px;font-weight:700;line-height:1;color:var(--ink);padding:0}
+  .tb-qty b{font-family:var(--mono);font-size:13px;font-weight:700;min-width:16px;text-align:center;color:var(--ink)}
+  .tb-qty b.on{color:var(--alert)}
   button{font-family:var(--sans);cursor:pointer;border:none}
   .btn{background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:9px 13px;border-radius:10px;white-space:nowrap;transition:transform .08s}
   .btn:active{transform:scale(.97)}
@@ -686,6 +691,7 @@ const LINEUP={
 /* 가격·시공비 데이터 삭제됨 (견적 기능 제거). BRANDS/LINEUP은 최종도면 제품코드용으로 유지 */
 /* =============================================================================================== */
 let selTongba='CB100';
+let tbQty=1;   // 통바 수량 (기본 1, 붙인 뒤 1로 자동 회귀)
 function tongbaDeduct(w){
   const t=w.tongba||{}; const sum=a=>(a||[]).reduce((s,id)=>s+(TONGBA[id]?TONGBA[id].deduct:0),0);
   return { W:sum(t.left)+sum(t.right), H:sum(t.top)+sum(t.bottom) };
@@ -1001,8 +1007,9 @@ function writeBody(w,i){
     <div class="c-sub">창 형태 변경</div><div class="mini-shape-grid">${shapes}</div>${sideRow}
     ${sizeEditor(w,i)}
     <div class="c-dia-wrap">${winDiagramSVG(w)}</div>
-    <div class="c-secthead">유리 사양 (색상까지)</div>
-    <div class="c-specwrap">${specSection(w,i,['door','thick','outer','inner','color'])}</div>
+    ${tongbaSection(w,i)}
+    <div class="c-secthead">유리 색상</div>
+    <div class="c-specwrap">${specSection(w,i,['color'])}</div>
     <button class="c-del" data-wdel="${i}">🗑 이 창 삭제</button>
   </div>`;
 }
@@ -1022,6 +1029,10 @@ function renderWrite(){
 $('#writeList').addEventListener('click',e=>{
   const tg=e.target.closest('[data-toggle]');
   if(tg){ const i=+tg.dataset.toggle; expandedIdx=(expandedIdx===i)?-1:i; renderWrite(); return; }
+  const tsel=e.target.closest('[data-tsel]');
+  if(tsel){ selTongba=tsel.dataset.tsel; renderWrite(); return; }   // 통바 종류 선택 (창 무관)
+  const tq=e.target.closest('[data-tqty]');
+  if(tq){ tbQty=Math.max(1,Math.min(9, tbQty + (tq.dataset.tqty==='+'?1:-1))); renderWrite(); return; }   // 통바 수량
   const wd=e.target.closest('[data-wdel]');
   if(wd){ deleteWindow(+wd.dataset.wdel); return; }
   const cel=e.target.closest('[data-ci]'); if(!cel)return; const i=+cel.dataset.ci; const w=windows[i]; if(!w)return;
@@ -1030,6 +1041,7 @@ $('#writeList').addEventListener('click',e=>{
   const pc=e.target.closest('[data-prodc]');
   if(pc){ w.product=(w.product===pc.dataset.prodc)?'':pc.dataset.prodc; w.spec={thick:'',outer:'',inner:'',color:'투명',gap:'',lock:'',screen:'',opts:[],door:''}; renderWrite(); renderTray(); autosave(); return; }
   const sh=e.target.closest('[data-shapec]'),sd=e.target.closest('[data-sidec]'),sp=e.target.closest('[data-spec]');
+  const tf=e.target.closest('[data-tface]'),tdel=e.target.closest('[data-tdel]'),fr=e.target.closest('[data-framec]');
   if(sh){ w.shape=sh.dataset.shapec; if(!(SHAPE_DEFS[w.shape]||{}).unbalanced && w.data) delete w.data['V']; }
   else if(sd) w.side=sd.dataset.sidec;
   else if(sp){ w.spec=w.spec||{}; const key=sp.dataset.spec,val=sp.dataset.val,multi=sp.dataset.multi==='1';
@@ -1037,6 +1049,10 @@ $('#writeList').addEventListener('click',e=>{
       if(val==='없음'){ w.spec[key]=(k>=0)?[]:['없음']; } else { if(k>=0)arr.splice(k,1); else arr.push(val); const n=arr.indexOf('없음'); if(n>=0)arr.splice(n,1);} }
     else w.spec[key]=(w.spec[key]===val)?'':val;
   }
+  else if(tf){ w.tongba=w.tongba||{top:[],bottom:[],left:[],right:[]}; const arr=(w.tongba[tf.dataset.tface]=w.tongba[tf.dataset.tface]||[]);
+    for(let k=0;k<tbQty;k++) arr.push(selTongba); tbQty=1; }   // 수량만큼 붙이고 기본값 1로 회귀
+  else if(tdel){ const [f,idx]=tdel.dataset.tdel.split(':'); if(w.tongba&&w.tongba[f]) w.tongba[f].splice(+idx,1); }
+  else if(fr){ w.frame=(w.frame===fr.dataset.framec)?'':fr.dataset.framec; }
   else return;
   renderWrite(); autosave();
 });
@@ -1175,7 +1191,8 @@ function consultBody(w,i){
 /* 통바(코너바) 편집 UI */
 function tongbaSection(w,i){
   const types=Object.keys(TONGBA).map(k=>`<button class="tb-type ${selTongba===k?'sel':''}" data-tsel="${k}" style="--tbc:${TONGBA[k].color}">${TONGBA[k].label}</button>`).join('');
-  const faces=[['top','▲ 상'],['bottom','▼ 하'],['left','◀ 좌'],['right','▶ 우']].map(([f,l])=>`<button class="tb-face" data-tface="${f}" data-ci="${i}">${l}</button>`).join('');
+  const faces=[['left','◀ 좌'],['right','▶ 우'],['top','▲ 상'],['bottom','▼ 하']].map(([f,l])=>`<button class="tb-face" data-tface="${f}" data-ci="${i}">${l}</button>`).join('');
+  const qty=`<span class="tb-qty"><span>수량</span><button data-tqty="-" data-ci="${i}">−</button><b class="${tbQty>1?'on':''}">${tbQty}</b><button data-tqty="+" data-ci="${i}">+</button></span>`;
   const t=w.tongba||{top:[],bottom:[],left:[],right:[]};
   const faceKor={top:'상',bottom:'하',left:'좌',right:'우'};
   const list=['top','bottom','left','right'].flatMap(f=>(t[f]||[]).map((id,idx)=>({f,id,idx})));
@@ -1185,7 +1202,7 @@ function tongbaSection(w,i){
   const frames=FRAMES.map(f=>`<button class="spec-chip ${w.frame===f?'sel':''}" data-framec="${f}" data-ci="${i}">${f}</button>`).join('');
   return `<div class="c-sub">통바(코너바)</div>
     <div class="tb-types">${types}</div>
-    <div class="tb-faces"><span>붙일 면 →</span>${faces}</div>
+    <div class="tb-faces"><span>붙일 면 →</span>${faces}${qty}</div>
     <div class="tb-chips">${chips}</div>
     <div class="tb-ded">${dedTxt}</div>
     <div class="c-sub">공틀</div><div class="spec-chips">${frames}</div>`;
@@ -1211,6 +1228,8 @@ $('#consultList').addEventListener('click',e=>{
   if(tg){ const i=+tg.dataset.toggle; expandedIdx=(expandedIdx===i)?-1:i; renderConsult(); return; }
   const tsel=e.target.closest('[data-tsel]');
   if(tsel){ selTongba=tsel.dataset.tsel; renderConsult(); return; }   // 통바 종류 선택 (창 무관)
+  const tq=e.target.closest('[data-tqty]');
+  if(tq){ tbQty=Math.max(1,Math.min(9, tbQty + (tq.dataset.tqty==='+'?1:-1))); renderConsult(); return; }   // 통바 수량
   const wd=e.target.closest('[data-wdel]');
   if(wd){ const i=+wd.dataset.wdel; deleteWindow(i); return; }
   const cel=e.target.closest('[data-ci]'); if(!cel)return; const i=+cel.dataset.ci; const w=windows[i]; if(!w)return;
@@ -1235,7 +1254,8 @@ $('#consultList').addEventListener('click',e=>{
     }
     else w.spec[key]=(w.spec[key]===val)?'':val;                        // 단일 선택
   }
-  else if(tf){ w.tongba=w.tongba||{top:[],bottom:[],left:[],right:[]}; (w.tongba[tf.dataset.tface]=w.tongba[tf.dataset.tface]||[]).push(selTongba); }
+  else if(tf){ w.tongba=w.tongba||{top:[],bottom:[],left:[],right:[]}; const arr=(w.tongba[tf.dataset.tface]=w.tongba[tf.dataset.tface]||[]);
+    for(let k=0;k<tbQty;k++) arr.push(selTongba); tbQty=1; }   // 수량만큼 붙이고 기본값 1로 회귀
   else if(tdel){ const [f,idx]=tdel.dataset.tdel.split(':'); if(w.tongba&&w.tongba[f]) w.tongba[f].splice(+idx,1); }
   else if(fr){ w.frame=(w.frame===fr.dataset.framec)?'':fr.dataset.framec; }
   else return;
@@ -1343,10 +1363,21 @@ function bigDiagramSVG(w){
   const vlab=(x,y,txt,col)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="7" font-weight="700" fill="${col||'#000'}" transform="rotate(-90 ${x} ${y})" shape-rendering="auto">${txt}</text>`;
   const hlab=(x,y,txt,col)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="7" font-weight="700" fill="${col||'#000'}" shape-rendering="auto">${txt}</text>`;
   const tw=id=>Math.max(3,tbDrawMM(id)*S);
-  let ox=fx; (t.left||[]).forEach(id=>{ const tb=TONGBA[id],v=tw(id); ox-=v; s+=band(ox,fy,v,fh,tb.color); s+=vlab(ox+v/2,fy+fh/2,tb.code,tb.tcol); });
-  let oxr=fx+fw; (t.right||[]).forEach(id=>{ const tb=TONGBA[id],v=tw(id); s+=band(oxr,fy,v,fh,tb.color); s+=vlab(oxr+v/2,fy+fh/2,tb.code,tb.tcol); oxr+=v; });
-  let oy=fy; (t.top||[]).forEach(id=>{ const tb=TONGBA[id],v=tw(id); oy-=v; s+=band(fx,oy,fw,v,tb.color); s+=hlab(fx+fw/2,oy+v/2,tb.code,tb.tcol); });
-  let oyb=fy+fh; (t.bottom||[]).forEach(id=>{ const tb=TONGBA[id],v=tw(id); s+=band(fx,oyb,fw,v,tb.color); s+=hlab(fx+fw/2,oyb+v/2,tb.code,tb.tcol); oyb+=v; });
+  // 같은 통바가 연속으로 붙으면 묶어서 수량 표기 (×2 빨강)
+  const runs=arr=>{ const r=[]; (arr||[]).forEach(id=>{ const last=r[r.length-1]; if(last&&last.id===id) last.n++; else r.push({id,n:1}); }); return r; };
+  const qlab=(x,y,n)=>n>1?`<text x="${x}" y="${y}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="9" font-weight="700" fill="#DC2626" shape-rendering="auto">×${n}</text>`:'';
+  let ox=fx; runs(t.left).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const x0=ox-v*g.n;
+    for(let k=0;k<g.n;k++){ const bx=ox-v*(k+1); s+=band(bx,fy,v,fh,tb.color); s+=vlab(bx+v/2,fy+fh/2,tb.code,tb.tcol); }
+    s+=qlab(x0+v*g.n/2, fy+fh+9, g.n); ox=x0; });
+  let oxr=fx+fw; runs(t.right).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const x0=oxr;
+    for(let k=0;k<g.n;k++){ s+=band(oxr,fy,v,fh,tb.color); s+=vlab(oxr+v/2,fy+fh/2,tb.code,tb.tcol); oxr+=v; }
+    s+=qlab(x0+v*g.n/2, fy+fh+9, g.n); });
+  let oy=fy; runs(t.top).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const y0=oy-v*g.n;
+    for(let k=0;k<g.n;k++){ const by=oy-v*(k+1); s+=band(fx,by,fw,v,tb.color); s+=hlab(fx+fw/2,by+v/2,tb.code,tb.tcol); }
+    s+=qlab(fx+fw/2+26, y0+v*g.n/2+3, g.n); oy=y0; });
+  let oyb=fy+fh; runs(t.bottom).forEach(g=>{ const tb=TONGBA[g.id],v=tw(g.id); const y0=oyb;
+    for(let k=0;k<g.n;k++){ s+=band(fx,oyb,fw,v,tb.color); s+=hlab(fx+fw/2,oyb+v/2,tb.code,tb.tcol); oyb+=v; }
+    s+=qlab(fx+fw/2+26, y0+v*g.n/2+3, g.n); });
   // 유리면 (미스트 도트 / 모루 줄무늬)
   const glassFill = isMist?'url(#mistPat)' : isMoru?'url(#moruPat)' : '#fff';
   s+=`<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" fill="${glassFill}" stroke="#000" stroke-width="1.2"/>`;
@@ -1917,7 +1948,7 @@ $('#finishBtn').addEventListener('click',()=>{
   phase='consulted';
   expandedIdx = windows.length?0:-1;
   switchTab('write');
-  toast('실측작성 탭 — 유리 사양(색상까지) 입력');
+  toast('실측작성 탭 — 통바·공틀·유리색상 입력');
 });
 /* 상담 완료 → 검증 후 저장 + 요약 */
 $('#doneBtn').addEventListener('click',()=>{
