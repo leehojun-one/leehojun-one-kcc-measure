@@ -446,17 +446,17 @@
   <div class="lg-box">
     <h2>현장 실측</h2>
     <div class="lg-sub">KCC글라스 · 로그인 후 사용할 수 있어요</div>
-    <input id="lgId" type="text" placeholder="아이디" autocomplete="username" autocapitalize="off" spellcheck="false">
+    <input id="lgId" type="text" placeholder="아이디 (이름)" autocomplete="username" autocapitalize="off" spellcheck="false">
     <input id="lgPw" type="password" placeholder="비밀번호" autocomplete="current-password">
     <button class="lg-btn" id="lgBtn">로그인</button>
     <div class="lg-err" id="lgErr"></div>
-    <div class="lg-note">계정 문의는 관리자에게 요청하세요</div>
+    <div class="lg-note">아이디는 본인 이름입니다 · 초기 비밀번호 1234<br>비밀번호를 잊었다면 관리자에게 초기화를 요청하세요</div>
   </div>
 </div>
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v54</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v55</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -632,6 +632,17 @@
   <div id="postEmbed" style="width:100%;height:60vh;min-height:340px"></div>
 </div></div>
 
+<div class="overlay" id="pwOverlay"><div class="sheet">
+  <h3 id="pwTitle">비밀번호 변경</h3>
+  <div class="lead" id="pwLead">현재 비밀번호와 새 비밀번호를 입력하세요</div>
+  <input class="site-input" id="pwOld" type="password" placeholder="현재 비밀번호" style="width:100%;margin-bottom:8px">
+  <input class="site-input" id="pwNew" type="password" placeholder="새 비밀번호 (4자 이상)" style="width:100%;margin-bottom:8px">
+  <input class="site-input" id="pwNew2" type="password" placeholder="새 비밀번호 확인" style="width:100%;margin-bottom:8px">
+  <div class="lg-err" id="pwErr"></div>
+  <button class="btn" id="pwSubmit" style="width:100%;background:var(--brand);color:#fff">변경하기</button>
+  <button class="btn ghost close" id="pwCancel" style="width:100%;margin-top:8px">취소</button>
+</div></div>
+
 <div class="overlay" id="docsOverlay"><div class="sheet">
   <h3>문서함</h3><div class="lead" id="docsLead"></div>
   <div id="docsList"></div>
@@ -657,7 +668,7 @@
 =================================================================== */
 const AI_PROXY_URL = '';
 /* ★ Apps Script 웹앱 URL (Code.gs 배포 후 붙여넣기) — 비워두면 로그인 없이 동작(개발용) */
-const AUTH_URL = 'https://script.google.com/macros/s/AKfycbzpUA2iFTsbZuesjka_5hNhQGPhtkGBT512O4-GRCM2HNYGuoUiVb5t_z9olcH13HgD3g/exec';
+const AUTH_URL = '';
 
 /* ===== Bosch GLM 50-27 CG BLE ===== */
 const SVC_UUID='02a6c0d0-0451-4000-b000-fb3210111989';
@@ -844,7 +855,7 @@ async function doLogin(){
       body:JSON.stringify({action:'login',id,pw,device:navigator.userAgent.slice(0,120)})});
     const j=await res.json();
     if(!j.ok){ err.textContent=j.error||'로그인 실패'; return; }
-    AUTH={token:j.token,id:j.id,name:j.name,role:j.role,exp:j.exp};
+    AUTH={token:j.token,id:j.id,name:j.name,role:j.role,exp:j.exp,mustChange:!!j.mustChange};
     LS.set('kcc_auth',AUTH);
     $('#loginGate').classList.remove('show');
     $('#lgPw').value='';
@@ -852,8 +863,44 @@ async function doLogin(){
     const t=allowedTabs(); switchTab(t.includes('measure')?'measure':t[0]);
     toast(`${j.name}님 (${ROLE_KOR[j.role]||j.role}) 로그인 ✓`);
     flushLogs();
+    if(j.mustChange) setTimeout(()=>openChpw(true),400);   // 초기비번 → 변경 강제
   }catch(e){ err.textContent='서버에 연결할 수 없어요 — 인터넷을 확인하세요'; }
   finally{ btn.disabled=false; btn.textContent='로그인'; }
+}
+/* ===== 비밀번호 변경 ===== */
+let pwForce=false;   // 초기비번 사용자 → 변경 전까지 닫을 수 없음
+function openChpw(force){
+  pwForce=!!force;
+  $('#pwOld').value=''; $('#pwNew').value=''; $('#pwNew2').value=''; $('#pwErr').textContent='';
+  $('#pwTitle').textContent = force? '새 비밀번호를 정하세요' : '비밀번호 변경';
+  $('#pwLead').textContent = force
+    ? '초기 비밀번호(1234)를 쓰고 있습니다. 본인만 아는 비밀번호로 바꿔주세요.'
+    : '현재 비밀번호와 새 비밀번호를 입력하세요';
+  $('#pwOld').placeholder = force? '현재 비밀번호 (1234)' : '현재 비밀번호';
+  $('#pwCancel').style.display = force? 'none' : '';
+  $('#pwOverlay').classList.add('show');
+  setTimeout(()=>$('#pwOld').focus(),150);
+}
+function closeChpw(){ if(pwForce) return; $('#pwOverlay').classList.remove('show'); }
+async function submitChpw(){
+  const oldPw=$('#pwOld').value, newPw=$('#pwNew').value, newPw2=$('#pwNew2').value;
+  const err=$('#pwErr'), btn=$('#pwSubmit');
+  if(!oldPw||!newPw){ err.textContent='모든 칸을 입력하세요'; return; }
+  if(newPw!==newPw2){ err.textContent='새 비밀번호가 서로 다릅니다'; return; }
+  if(newPw.length<4){ err.textContent='새 비밀번호는 4자 이상이어야 합니다'; return; }
+  if(newPw==='1234'){ err.textContent='초기 비밀번호(1234)는 사용할 수 없습니다'; return; }
+  if(!AUTH||!AUTH_URL){ err.textContent='로그인 상태가 아니에요'; return; }
+  btn.disabled=true; btn.textContent='변경 중…'; err.textContent='';
+  try{
+    const res=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'chpw',token:AUTH.token,oldPw,newPw,device:navigator.userAgent.slice(0,120)})});
+    const j=await res.json();
+    if(!j.ok){ err.textContent=j.error||'변경 실패'; return; }
+    pwForce=false;
+    $('#pwOverlay').classList.remove('show');
+    toast('비밀번호가 변경되었습니다 ✓');
+  }catch(e){ err.textContent='서버에 연결할 수 없어요 — 인터넷을 확인하세요'; }
+  finally{ btn.disabled=false; btn.textContent='변경하기'; }
 }
 function doLogout(silent){
   logEvent('logout','로그아웃'); 
@@ -865,7 +912,7 @@ function doLogout(silent){
 function requireAuth(){
   if(!AUTH_URL) return true;                       // 개발 모드
   const a=LS.get('kcc_auth');
-  if(a && a.token && a.exp && a.exp>Date.now()){ AUTH=a; return true; }
+  if(a && a.token && a.exp && a.exp>Date.now()){ AUTH=a; if(a.mustChange) setTimeout(()=>openChpw(true),600); return true; }
   LS.set('kcc_auth',null); AUTH=null;
   $('#loginGate').classList.add('show');
   return false;
@@ -2326,6 +2373,11 @@ $('#lgPw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 $('#lgId').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#lgPw').focus(); });
 $('#logoutBtn').addEventListener('click',()=>{ if(confirm('로그아웃할까요?')) doLogout(); });
 $('#logsBtn').addEventListener('click',openLogs);
+$('#pwBtn').addEventListener('click',()=>openChpw(false));
+$('#pwSubmit').addEventListener('click',submitChpw);
+$('#pwCancel').addEventListener('click',closeChpw);
+$('#pwNew2').addEventListener('keydown',e=>{ if(e.key==='Enter') submitChpw(); });
+$('#pwOverlay').addEventListener('click',e=>{ if(e.target===$('#pwOverlay')) closeChpw(); });
 $('#logClose').addEventListener('click',()=>$('#logOverlay').classList.remove('show'));
 $('#logOverlay').addEventListener('click',e=>{ if(e.target===$('#logOverlay')) $('#logOverlay').classList.remove('show'); });
 window.addEventListener('online',flushLogs);
