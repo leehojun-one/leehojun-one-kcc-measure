@@ -352,6 +352,12 @@
   .meas-toolbar{display:flex;gap:8px;margin-top:12px}
   .meas-toolbar button{flex:1;font-family:var(--sans);font-size:13px;font-weight:600;padding:12px 8px;border-radius:12px;border:none;background:var(--surface);color:var(--ink-2);box-shadow:var(--shadow)}
   .meas-toolbar button:active{background:var(--surface-2)}
+  .meas-viewbar{display:flex;align-items:center;gap:10px;margin-top:10px;padding:0 2px}
+  .meas-viewbar button{font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 12px;border-radius:10px;border:1px solid var(--hair);background:var(--surface);color:var(--ink-2);white-space:nowrap}
+  .meas-viewbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .meas-viewbar span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  #drawMeasFit{width:100%;overflow:hidden}
+  #drawMeasFit.a3 #drawMeasSheet{transform-origin:top left}
   /* 로그인 */
   #loginGate{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#EEF2F7,#E2E8F0);display:none;align-items:center;justify-content:center;padding:20px}
   #loginGate.show{display:flex}
@@ -473,7 +479,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v68</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v69</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -570,7 +576,11 @@
     <button id="measPrintBtn">🖨 출력 · PDF</button>
     <button id="measPngBtn">🖼 PNG 저장</button>
   </div>
-  <div id="drawMeasSheet"></div>
+  <div class="meas-viewbar dw-noprint">
+    <button id="measViewBtn">📐 A3 가로 미리보기</button>
+    <span id="measPageInfo"></span>
+  </div>
+  <div id="drawMeasFit"><div id="drawMeasSheet"></div></div>
 </div>
 
 <input type="file" id="importFileInput" accept=".json,.kcc,application/json" style="display:none">
@@ -1327,6 +1337,7 @@ function renderMeasDraw(){
       <div class="dw-slogan">◎ 도면에 표기된 치수(사이즈)는 통바 제외한 창호 사이즈 입니다.</div>
       <div class="dw-meas-note dw-noprint">${measChanged()?'✏ 저장 후 실측이 수정되었습니다 — [실측정보 저장]을 누르면 V'+(savedVer+1)+'로 새로 저장됩니다 (이전 버전 보존)':'실측 시점의 원본입니다 — 상담에서 유리·옵션을 바꿔도 이 도면은 변하지 않아요'}</div>`;
   } finally { windows=live; }
+  applyMeasPaper();
   updateSendGate();
 }
 /* ===================== 문서함 — 투트랙 저장 · 버전 누적(덮어쓰기 없음) =====================
@@ -1538,18 +1549,58 @@ $('#addWinBtn').addEventListener('click',()=>{ returnTab='write'; resetForm(); s
 $('#writeNextBtn').addEventListener('click',()=>{ if(!windows.length){ toast('작성할 창이 없어요'); return; } snapMeasurement(); switchTab('measDraw'); });
 $('#toConsultBtn').addEventListener('click',()=>switchTab('consult'));
 $('#measPrintBtn').addEventListener('click',()=>{ logEvent('meas_print','실측도면 출력'); openDrawing(); });
+/* 실측도면을 최종도면과 같은 A3 가로 판형으로 미리보기 (화면 폭에 맞춰 축소) */
+let measViewA3 = true;
+function applyMeasPaper(){
+  const fit=$('#drawMeasFit'), sheet=$('#drawMeasSheet');
+  if(!fit||!sheet) return;
+  const btn=$('#measViewBtn'), info=$('#measPageInfo');
+  const grid=sheet.querySelector('.dw-grid');
+  if(btn){ btn.classList.toggle('on', measViewA3); btn.textContent = measViewA3? '📐 A3 가로 미리보기' : '📱 크게 보기'; }
+  if(!measViewA3){                                   // 화면에 맞춘 읽기 편한 보기
+    fit.classList.remove('a3');
+    sheet.style.width=''; sheet.style.transform=''; fit.style.height='';
+    if(grid) grid.style.gridTemplateColumns='';
+    if(info) info.textContent='화면 맞춤 보기';
+    return;
+  }
+  const usableW=A3L.w-MARGIN*2, usableH=A3L.h-MARGIN*2;
+  const cols=Math.max(1, Math.floor(usableW/(46*dwZoom)));
+  const px=usableW*3.7795;                           // mm → px
+  fit.classList.add('a3');
+  sheet.style.width=px+'px';
+  if(grid) grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  requestAnimationFrame(()=>{
+    const scale=(fit.clientWidth||1)/px;
+    sheet.style.transform=`scale(${scale})`;
+    fit.style.height=(sheet.scrollHeight*scale)+'px';
+    if(info){
+      const total=sheet.querySelectorAll('.dw-card').length;
+      const rows=Math.ceil(total/cols);
+      const rowMM=(usableW/cols)*1.05+3;
+      const perPage=Math.max(1,Math.floor((usableH-14)/rowMM));
+      info.textContent=`A3 가로 · ${cols}단 · ${rows}줄 · ${Math.max(1,Math.ceil(rows/perPage))}페이지`;
+    }
+  });
+}
+window.addEventListener('resize',()=>{ if($('#drawMeasTab').style.display!=='none') applyMeasPaper(); });
+window.addEventListener('orientationchange',()=>setTimeout(()=>{ if($('#drawMeasTab').style.display!=='none') applyMeasPaper(); },350));
 /* 실측도면 PNG — 모바일에선 공유 시트(카톡)로, 안 되면 저장 */
 async function exportMeasPNG(){
   if(!windows.length){ toast('출력할 창이 없어요'); return; }
   const root=$('#drawMeasSheet');
   if(typeof html2canvas==='undefined'){ toast('PNG 라이브러리 로딩 중 — 잠시 후 다시'); return; }
   toast('실측도면 PNG 생성 중…');
+  const fitBox=$('#drawMeasFit');
+  const prevT=root.style.transform, prevH=fitBox.style.height;
+  root.style.transform='none'; fitBox.style.height='auto';   // 축소 해제 → 원본 해상도로 캡처
   try{
     const canvas=await html2canvas(root,{
       scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false,
       windowWidth:root.scrollWidth, windowHeight:root.scrollHeight,
       ignoreElements:(el)=>el.classList && el.classList.contains('dw-noprint')
     });
+    root.style.transform=prevT; fitBox.style.height=prevH;
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
     if(!blob){ toast('PNG 생성 실패'); return; }
     const fname=fileBase()+'_실측도면.png';
@@ -1563,9 +1614,11 @@ async function exportMeasPNG(){
     setTimeout(()=>URL.revokeObjectURL(a.href),2000);
     toast('실측도면 PNG 저장 완료 ✓');
   }catch(e){ console.error(e); toast('PNG 실패 — [출력·PDF]를 사용하세요'); }
+  finally{ root.style.transform=prevT; fitBox.style.height=prevH; }
 }
 $('#measPngBtn').addEventListener('click',exportMeasPNG);
 $('#measSaveBtn').addEventListener('click',saveMeasDoc);
+$('#measViewBtn').addEventListener('click',()=>{ measViewA3=!measViewA3; applyMeasPaper(); });
 $('#drawSaveBtn').addEventListener('click',saveConsultDoc);
 $('#docsBtn').addEventListener('click',openDocs);
 $('#installBtn').addEventListener('click',doInstall);
