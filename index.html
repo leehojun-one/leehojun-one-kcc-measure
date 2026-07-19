@@ -238,7 +238,9 @@
   /* v22: 섹션 구분 / 활성 카드 / 삭제 */
   .c-secthead{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.02em;padding:0;margin:22px 0 10px}
   .c-secthead:first-child{margin-top:6px}
-  .c-del{width:100%;margin-top:16px;background:transparent;border:1px solid var(--alert);color:var(--alert);font-size:13px;font-weight:600;padding:11px;border-radius:10px}
+  .c-remeas{width:100%;margin-top:14px;background:var(--surface-2);border:1px solid var(--hair);color:var(--ink-2);font-size:13px;font-weight:600;padding:11px;border-radius:10px}
+  .c-remeas:active{background:var(--brand-soft)}
+  .c-del{width:100%;margin-top:8px;background:transparent;border:1px solid var(--alert);color:var(--alert);font-size:13px;font-weight:600;padding:11px;border-radius:10px}
   .c-del:active{background:var(--alert);color:#fff}
   .chip-done.chip-editing{background:var(--brand);border-color:var(--brand);box-shadow:var(--shadow-btn)}
   .chip-done.chip-editing .n,.chip-done.chip-editing .p,.chip-done.chip-editing .s{color:#fff}
@@ -362,6 +364,10 @@
   .tabbar button.locked{opacity:.32}
   /* 로그 보기 (관리자) */
   .meas-toolbar button.prime{background:var(--brand);color:#fff}
+  .actionbar button:disabled{opacity:.42}
+  .doc-actions{flex:none;display:flex;gap:6px}
+  .doc-actions button{font-family:var(--mono);font-size:10.5px;font-weight:700;border:1px solid var(--hair);background:#fff;color:var(--ink-2);border-radius:8px;padding:5px 8px}
+  .doc-actions button.load{border-color:var(--brand);color:var(--brand)}
   #docsList{max-height:58vh;overflow:auto}
   .doc-group{margin-bottom:14px}
   .doc-code{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;padding:4px 2px;border-bottom:1px solid var(--hair);margin-bottom:4px}
@@ -459,7 +465,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v62</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v64</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -468,10 +474,8 @@
   </div>
   <input class="site-input" id="addrDisplay" placeholder="🔍 주소 검색 (클릭/탭하여 검색)" readonly style="width:100%;margin-top:7px;cursor:pointer">
   <div class="toolbar-top">
-    <button id="saveTopBtn">💾 저장</button>
-    <button id="loadBtn">📂 불러오기</button>
-    <button id="importBtn">📥 받기</button>
     <button id="docsBtn">📁 문서함</button>
+    <button id="importBtn">📥 받기</button>
     <button id="newBtn">＋ 새 실측</button>
   </div>
   <div class="tray" id="tray"><div class="chip-cur">창 1 작업 중</div></div>
@@ -548,6 +552,7 @@
 
 <div id="writeTab" style="display:none">
   <div id="writeList"></div>
+  <button class="c-remeas" id="addWinBtn" style="margin-top:12px">＋ 창 추가 (실측 탭으로)</button>
 </div>
 
 <div id="drawMeasTab" style="display:none">
@@ -571,7 +576,7 @@
 </div>
 <div class="inner" id="measDrawBar" style="display:none">
   <button class="next" id="toConsultBtn">고객상담 →</button>
-  <button class="finish" id="sendKakaoBtn">📤 실측파일 보내기</button>
+  <button class="finish" id="sendKakaoBtn" disabled>📤 실측파일 보내기</button>
 </div>
 <div class="inner" id="consultBar" style="display:none">
   <button class="next" id="drawBtn">📄 최종도면</button>
@@ -1124,7 +1129,6 @@ $('#detailDone').addEventListener('click',()=>{
 $('#detailOverlay').addEventListener('click',e=>{ if(e.target===$('#detailOverlay')) $('#detailOverlay').classList.remove('show'); });
 
 /* 저장하기 (실측 화면) */
-$('#saveTopBtn').addEventListener('click',()=>{ if(commitSession(true)) toast('기기에 저장됨 ✓'); });
 
 /* 새 실측(초기화) */
 function startNewSession(){
@@ -1169,6 +1173,7 @@ function updateActionLabels(){
   else { if(cb)cb.textContent='✓ 확정하고 다음 창 →'; if(fb)fb.textContent='실측 완료 → 작성'; }
 }
 let prevTab='measure';
+let returnTab=null;   // 실측작성에서 넘어온 경우 저장 후 복귀
 function switchTab(name){
   const allow=allowedTabs();
   if(!allow.includes(name)) name=allow[0];       // 권한 없는 탭은 접근 차단
@@ -1235,6 +1240,7 @@ function writeBody(w,i){
     ${tongbaSection(w,i)}
     <div class="c-secthead">문 방향 · 핸들 높이 · 유리 색상</div>
     <div class="c-specwrap">${specSection(w,i,['door','handle','color'])}</div>
+    <button class="c-remeas" data-wedit="${i}">✏ 실측 수정 (실측 탭으로)</button>
     <button class="c-del" data-wdel="${i}">🗑 이 창 삭제</button>
   </div>`;
 }
@@ -1252,6 +1258,8 @@ function renderWrite(){
   }).join('');
 }
 $('#writeList').addEventListener('click',e=>{
+  const we=e.target.closest('[data-wedit]');
+  if(we){ returnTab='write'; editWindow(+we.dataset.wedit); return; }
   const tg=e.target.closest('[data-toggle]');
   if(tg){ const i=+tg.dataset.toggle; expandedIdx=(expandedIdx===i)?-1:i; renderWrite(); return; }
   const tsel=e.target.closest('[data-tsel]');
@@ -1310,6 +1318,7 @@ function renderMeasDraw(){
       <div class="dw-slogan">◎ 도면에 표기된 치수(사이즈)는 통바 제외한 창호 사이즈 입니다.</div>
       <div class="dw-meas-note dw-noprint">${measChanged()?'✏ 저장 후 실측이 수정되었습니다 — [실측정보 저장]을 누르면 V'+(savedVer+1)+'로 새로 저장됩니다 (이전 버전 보존)':'실측 시점의 원본입니다 — 상담에서 유리·옵션을 바꿔도 이 도면은 변하지 않아요'}</div>`;
   } finally { windows=live; }
+  updateSendGate();
 }
 /* ===================== 문서함 — 투트랙 저장 · 버전 누적(덮어쓰기 없음) =====================
    ① 실측정보저장 → "실측지 20260718001 신도림현대 101동 102호"
@@ -1359,8 +1368,8 @@ function saveMeasDoc(){
   const rec=saveDoc('meas'); if(!rec) return;
   measSnap=JSON.parse(JSON.stringify(rec.windows));   // 실측도면은 이 저장본 기준
   measLocked=true; if(!measOwner){ measOwner=myId(); measByName=myName(); }
-  autosave(); renderMeasDraw();
-  toast(`✓ ${rec.title} 저장됨`);
+  autosave(); renderMeasDraw(); updateSendGate();
+  toast(`✓ ${rec.title} 저장됨 — 이제 실측파일을 보낼 수 있어요`);
 }
 /* 상담도면 저장 — 상담 반영본 */
 function saveConsultDoc(){
@@ -1372,6 +1381,18 @@ function saveConsultDoc(){
   const rec=saveDoc('consult'); if(!rec) return;
   toast(`✓ ${rec.title} 저장됨`);
 }
+/* 이 세션에 저장된 실측지 버전 수 */
+function savedMeasVer(){
+  if(!sessionCodeVal) return 0;
+  return (LS.get('kcc_docs')||[]).filter(d=>d.code===sessionCodeVal && d.type==='meas').length;
+}
+/* 실측정보를 저장해야 실측파일을 보낼 수 있음 */
+function updateSendGate(){
+  const btn=$('#sendKakaoBtn'); if(!btn) return;
+  const ready = savedMeasVer()>0 && !measChanged();
+  btn.disabled=!ready;
+  btn.textContent = ready? '📤 실측파일 보내기' : '📤 보내기 (실측정보 저장 필요)';
+}
 /* 실측 내용이 마지막 저장본과 달라졌는지 */
 function measChanged(){
   if(!measSnap) return false;
@@ -1380,7 +1401,7 @@ function measChanged(){
 /* 문서함 열기 */
 function openDocs(){
   const docs=LS.get('kcc_docs')||[];
-  $('#docsLead').textContent = docs.length? `${docs.length}건 · 최신순 (이전 버전은 수정·삭제되지 않습니다)` : '저장된 문서가 없어요';
+  $('#docsLead').textContent = docs.length? `${docs.length}건 · 최신순 · [도면] 보기 / [불러오기] 이어서 작업 (이전 버전은 절대 수정·삭제되지 않습니다)` : '저장된 문서가 없어요 — 실측도면 탭에서 [실측정보 저장]을 눌러보세요';
   const byCode={};
   docs.forEach(d=>{ (byCode[d.code]=byCode[d.code]||[]).push(d); });
   const box=$('#docsList');
@@ -1388,14 +1409,31 @@ function openDocs(){
     const items=byCode[code].sort((a,b)=>b.ts-a.ts);
     const rows=items.map(d=>{
       const dt=new Date(d.ts).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'});
-      return `<div class="doc-row" data-doc="${d.id}">
+      return `<div class="doc-row">
         <span class="doc-badge ${d.type}">${DOC_KOR[d.type]}</span>
-        <div class="doc-info"><b>${d.title}</b><span>창 ${d.windows.length}개 · ${d.byName||d.byId||'—'} · ${dt}</span></div>
-        <span class="doc-ver">V${d.ver}</span></div>`;
+        <div class="doc-info"><b>${d.title}</b><span>창 ${d.windows.length}개 · ${d.byName||d.byId||'—'} · ${dt} · V${d.ver}</span></div>
+        <div class="doc-actions"><button data-doc="${d.id}">도면</button><button class="load" data-docload="${d.id}">불러오기</button></div></div>`;
     }).join('');
     return `<div class="doc-group"><div class="doc-code">${code}</div>${rows}</div>`;
   }).join('') || '<div class="c-empty">아직 저장된 문서가 없어요</div>';
   $('#docsOverlay').classList.add('show');
+}
+/* 문서 불러오기 — 저장본을 현재 작업으로 가져와 이어서 진행 */
+function loadDoc(id){
+  const d=(LS.get('kcc_docs')||[]).find(x=>x.id===id); if(!d) return;
+  if(windows.length && !confirm(`작업 중인 내용을 닫고 아래 문서를 불러옵니다.\n\n  ${d.title}\n\n계속할까요?`)) return;
+  siteName=d.site||''; custPhone=d.phone||''; siteAddr=d.addr||''; siteBuilding=d.building||''; siteDetail=d.detail||'';
+  $('#siteInput').value=siteName; $('#custPhone').value=custPhone; showFullAddr();
+  sessionId=null; sessionCodeVal=d.code; editingIndex=null;
+  windows=JSON.parse(JSON.stringify(d.windows)); current=blankWindow();
+  measSnap=JSON.parse(JSON.stringify(d.windows)); measLocked=true;
+  measOwner=d.byId||null; measByName=d.byName||'';
+  phase='consulted'; expandedIdx = windows.length?0:-1;
+  loadIntoForm(current); renderTray(); autosave(); updateCustGate();
+  $('#docsOverlay').classList.remove('show');
+  switchTab(d.type==='meas'?'measDraw':'consult');
+  logEvent('doc_load', d.title);
+  toast(`${d.title} 불러옴`);
 }
 /* 문서 열람 — 저장본 그대로 도면 출력 (현재 작업에 영향 없음) */
 function viewDoc(id){
@@ -1438,11 +1476,13 @@ function buildSessionObj(){
 /* 보내기 — 실측파일을 공유 시트(카카오톡)로, 미지원 시 파일 저장 */
 async function sendSessionFile(){
   if(!windows.length){ toast('보낼 실측이 없어요'); return; }
-  if(!measSnap || measChanged()){                       // 전송 전 실측지 저장본 확보
-    if(!confirm(`실측파일을 보내기 전에 실측지를 저장합니다.\n\n  ${docTitle('meas',nextVer('meas'))}\n\n저장 후 전송할까요?`)) return;
+  if(savedMeasVer()===0){ toast('먼저 [실측정보 저장]을 눌러주세요'); return; }
+  if(measChanged()){                                   // 저장 후 수정됨 → 새 버전으로
+    if(!confirm(`저장 이후 실측이 수정되었습니다.\n\n  ${docTitle('meas',nextVer('meas'))}\n\n새 버전으로 저장한 뒤 보낼까요?`)) return;
     const rec=saveDoc('meas'); if(!rec) return;
     measSnap=JSON.parse(JSON.stringify(rec.windows)); measLocked=true;
     if(!measOwner){ measOwner=myId(); measByName=myName(); }
+    updateSendGate();
   }
   const json=JSON.stringify(buildSessionObj());
   const fname=fileBase()+'_실측파일.json';
@@ -1482,6 +1522,7 @@ function importSessionFile(file){
 $('#sendKakaoBtn').addEventListener('click',sendSessionFile);
 $('#importBtn').addEventListener('click',()=>$('#importFileInput').click());
 $('#importFileInput').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; importSessionFile(f); e.target.value=''; });
+$('#addWinBtn').addEventListener('click',()=>{ returnTab='write'; resetForm(); switchTab('measure'); toast('새 창을 실측하세요 — 확정하면 실측작성으로 돌아옵니다'); });
 $('#writeNextBtn').addEventListener('click',()=>{ if(!windows.length){ toast('작성할 창이 없어요'); return; } snapMeasurement(); switchTab('measDraw'); });
 $('#toConsultBtn').addEventListener('click',()=>switchTab('consult'));
 $('#measPrintBtn').addEventListener('click',()=>{ logEvent('meas_print','실측도면 출력'); openDrawing(); });
@@ -1517,7 +1558,10 @@ $('#drawSaveBtn').addEventListener('click',saveConsultDoc);
 $('#docsBtn').addEventListener('click',openDocs);
 $('#docsClose').addEventListener('click',()=>$('#docsOverlay').classList.remove('show'));
 $('#docsOverlay').addEventListener('click',e=>{ if(e.target===$('#docsOverlay')) $('#docsOverlay').classList.remove('show'); });
-$('#docsList').addEventListener('click',e=>{ const r=e.target.closest('[data-doc]'); if(r) viewDoc(r.dataset.doc); });
+$('#docsList').addEventListener('click',e=>{
+  const v=e.target.closest('[data-doc]'); if(v){ viewDoc(v.dataset.doc); return; }
+  const l=e.target.closest('[data-docload]'); if(l) loadDoc(l.dataset.docload);
+});
 
 /* ===== 상담 탭 렌더 ===== */
 function specSummary(w){
@@ -1809,8 +1853,8 @@ function bigDiagramSVG(w){
   const sym=(x,y,txt,size,col)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="${size||14}" font-weight="700" fill="${col||'#000'}" shape-rendering="auto">${txt}</text>`;
   const scr=(x,y)=>`<text x="${x}" y="${y}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="12" font-weight="700" fill="#DC2626" shape-rendering="auto">#(망)</text>`;
   const vtxt=(x,y)=>('V' in w.data)?`<text x="${x}" y="${y}" text-anchor="middle" font-family="'Malgun Gothic','맑은 고딕',sans-serif" font-size="13" font-weight="700" fill="#DC2626" shape-rendering="auto">${w.data['V']}</text>`:'';
-  if(def.handle){                                       // 터닝도어: 하단 중앙 손잡이 + 문 방향
-    s+=bottomHandle(cx, fy+fh);
+  if(def.handle){                                       // 터닝도어: 보조선 넓은쪽(밑변) 중앙에 핸들
+    s+=doorHandle(w.side==='좌'?fx+8:fx+fw-8, ym, w.side);
     if(sp.door) s+=`<text x="${cx}" y="${fy+fh+13}" text-anchor="middle" font-family="${"'Malgun Gothic','맑은 고딕',sans-serif"}" font-size="11" font-weight="700" fill="#111" shape-rendering="auto">${sp.door} / ${w.side}핸들</text>`;
   } else if(w.shape==='3W'||w.shape==='3WU'){           // 3W/3WU: 좌=▶, 우=◀ (텍스트 없음)
     const r=(w.shape==='3WU')?ubRatio(w):0.25;
@@ -1861,15 +1905,19 @@ function bigDiagramSVG(w){
 function isDoubleWin(p){ return /이중창/.test(p||''); }
 function reflectColor(s,color){ if(!s)return s; if(color==='미스트')return s.replace('투명','미스트'); if(color==='모루')return s.replace('투명','모루'); return s; }
 function glassSpecText(w){
-  const sp=w.spec||{}; if(!sp.thick)return '';
+  // 두께·사양은 상담에서 정하지만, 실측작성에서 고른 미스트/모루는 그 전에도 보이게
+  const sp=w.spec||{};
+  let body;
   if(isDoubleWin(w.product)){
-    // 이중창: 외측 그대로, 내측 앞쪽 투명만 미스트/모루
-    const outer=sp.outer||'';
-    const inner=reflectColor(sp.inner,sp.color);
-    return `${sp.thick} ${outer}${inner?' / '+inner:''}`.trim();
+    const outer=sp.outer||'', inner=reflectColor(sp.inner,sp.color)||'';
+    body=[outer,inner].filter(Boolean).join(' / ');
+  } else {
+    body=reflectColor(sp.outer,sp.color)||'';
   }
-  // 단창: 외측만, 외측 투명 → 미스트/모루
-  return `${sp.thick} ${reflectColor(sp.outer,sp.color)||''}`.trim();
+  const col=sp.color;
+  if(col && col!=='투명' && !body.includes(col)) body = body ? `${body} · ${col}` : col;
+  const th=sp.thick||'';
+  return `${th}${th&&body?' ':''}${body}`.trim();
 }
 function glassColor(g){ if(!g)return '#1D4ED8'; if(g.includes('미스트')||g.includes('모루'))return '#DC2626'; return '#1D4ED8'; }
 /* 옵션 시인성 — 전 창의 최빈값(기본)과 다르면 강조 표시 */
@@ -2336,6 +2384,8 @@ function saveCurrentWindow(){
   const win=JSON.parse(JSON.stringify(current));
   if(editingIndex!=null){ const n=editingIndex+1; windows[editingIndex]=win; editingIndex=null; toast(`${n}번 창 갱신됨 ✓`); }
   else { windows.push(win); toast(`창 ${windows.length} 저장됨 ✓`); }
+  if(returnTab==='write'){ returnTab=null; expandedIdx=(editingIndex!=null?editingIndex:windows.length-1);
+    setTimeout(()=>{ resetForm(); switchTab('write'); },260); }
   if(!measOwner){ measOwner=myId(); measByName=myName(); }
   logEvent('window_save',`창 ${windows.length} 저장 · ${win.location||''} ${win.w}×${win.h}`);
   resetForm(); renderTray(); autosave(); return true;
@@ -2434,7 +2484,6 @@ function loadSession(id){
   toast(`'${rec.label||rec.site}' 불러옴 — 창을 펼쳐 상담/수정하세요`);
 }
 function deleteSession(id){ let saved=LS.get('kcc_saved')||[]; saved=saved.filter(x=>x.id!==id); LS.set('kcc_saved',saved); openLoad(); }
-$('#loadBtn').addEventListener('click',openLoad);
 $('#lgBtn').addEventListener('click',doLogin);
 $('#lgPw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 $('#lgId').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#lgPw').focus(); });
@@ -2470,20 +2519,11 @@ $('#loadOverlay').addEventListener('click',e=>{ if(e.target===$('#loadOverlay'))
   applyRoleUI();
   if(authed) flushLogs();
   if(!navigator.bluetooth) $('#notice').style.display='block';
+  /* 항상 새 실측으로 시작 — 직전 작업은 백업만 해두고 화면엔 띄우지 않음 */
   const r=LS.get('kcc_current');
-  const hasWork = r && ((r.windows&&r.windows.length) || (r.draft&&r.draft.location) || (r.draft&&r.draft.data&&Object.keys(r.draft.data).length) || r.site);
-  if(hasWork){
-    siteName=r.site||''; custPhone=r.phone||''; siteAddr=r.addr||''; siteBuilding=r.building||''; siteDetail=r.detail||'';
-    $('#siteInput').value=siteName; $('#custPhone').value=custPhone; sessionId=r.sessionId||null;
-    showFullAddr();
-    windows=r.windows||[]; current=r.draft||blankWindow();
-    measSnap=r.snap?JSON.parse(JSON.stringify(r.snap)):null; measLocked=!!r.locked;   // 실측 원본 복구
-    measOwner=r.owner||null; measByName=r.ownerName||''; selfMeasure=!!r.self;
-    loadIntoForm(current); renderTray();
-    setTimeout(()=>toast('이전 작업을 복구했어요'),300);
-  } else {
-    selectShape('2W'); selectSide('좌'); setActive('W1'); renderTray();
-  }
+  if(r && ((r.windows&&r.windows.length)||r.site)) LS.set('kcc_prev', r);
+  LS.set('kcc_current', null);
+  selectShape('2W'); selectSide('좌'); setActive('W1'); renderTray();
   updateCustGate();
   if(AUTH){ const t=allowedTabs(); if(!t.includes('measure')) switchTab(t[0]); }
 })();
