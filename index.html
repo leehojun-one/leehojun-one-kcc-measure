@@ -262,7 +262,7 @@
 
   /* 도면 출력 */
   .draw-overlay{position:fixed;inset:0;background:#fff;z-index:80;display:none;flex-direction:column}
-  .draw-overlay.show{display:flex}
+  .draw-overlay.show{display:flex;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
   .dw-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--hair);background:var(--paper);position:sticky;top:0;z-index:2}
   .dw-topbar span{font-family:var(--sans);font-weight:700;font-size:15px}
   .dw-topbar button{font-family:var(--sans);font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;border:1px solid var(--hair);background:var(--surface)}
@@ -357,7 +357,10 @@
   .meas-viewbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .meas-viewbar span{font-family:var(--mono);font-size:11px;color:var(--muted)}
   #drawMeasFit,#drawFit{width:100%;overflow:hidden}
+  #drawFit{flex:none}
   #drawMeasFit.a3 #drawMeasSheet,#drawFit.a3 #drawSheet{transform-origin:top left}
+  /* A3 판형일 때는 시트 자체 스크롤을 끄고 오버레이가 스크롤을 담당 */
+  #drawFit.a3 #drawSheet{flex:none;overflow:visible;height:auto}
   @media print{ #drawFit{overflow:visible !important;height:auto !important} }
   /* 로그인 */
   #loginGate{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#EEF2F7,#E2E8F0);display:none;align-items:center;justify-content:center;padding:20px}
@@ -480,7 +483,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v70</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v71</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -2621,6 +2624,7 @@ $('#loadOverlay').addEventListener('click',e=>{ if(e.target===$('#loadOverlay'))
 /* ===== PWA · 카카오톡 공유 수신 =====
    홈 화면에 추가하면 안드로이드 공유 시트에 '현장실측'이 나타나고,
    카톡의 실측파일을 공유하면 이 앱이 열리면서 바로 불러옵니다. */
+try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
