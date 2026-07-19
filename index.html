@@ -7,6 +7,8 @@
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1B2559">
 <link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="64x64" href="./favicon-64.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -471,7 +473,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v66</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v68</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -483,6 +485,7 @@
     <button id="docsBtn">📁 문서함</button>
     <button id="importBtn">📥 받기</button>
     <button id="newBtn">＋ 새 실측</button>
+    <button id="installBtn" style="display:none;background:var(--brand);color:#fff">📲 앱 설치</button>
   </div>
   <div class="tray" id="tray"><div class="chip-cur">창 1 작업 중</div></div>
   <div class="tabbar">
@@ -1565,6 +1568,7 @@ $('#measPngBtn').addEventListener('click',exportMeasPNG);
 $('#measSaveBtn').addEventListener('click',saveMeasDoc);
 $('#drawSaveBtn').addEventListener('click',saveConsultDoc);
 $('#docsBtn').addEventListener('click',openDocs);
+$('#installBtn').addEventListener('click',doInstall);
 $('#docsClose').addEventListener('click',()=>$('#docsOverlay').classList.remove('show'));
 $('#docsOverlay').addEventListener('click',e=>{ if(e.target===$('#docsOverlay')) $('#docsOverlay').classList.remove('show'); });
 $('#docsList').addEventListener('click',e=>{
@@ -2543,6 +2547,33 @@ $('#loadOverlay').addEventListener('click',e=>{ if(e.target===$('#loadOverlay'))
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
+/* 앱 설치 — 설치해야 카톡 '공유' 목록에 뜹니다 (안드로이드 크롬) */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  const b=$('#installBtn'); if(b) b.style.display='';
+});
+window.addEventListener('appinstalled',()=>{
+  deferredPrompt=null;
+  const b=$('#installBtn'); if(b) b.style.display='none';
+  toast('설치 완료 — 이제 카톡에서 [공유]로 실측파일을 열 수 있어요');
+});
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+}
+async function doInstall(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const r=await deferredPrompt.userChoice;
+    deferredPrompt=null; $('#installBtn').style.display='none';
+    if(r&&r.outcome==='accepted') toast('설치 중…');
+    return;
+  }
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  alert(ios
+    ? '아이폰은 사파리에서\n\n[공유] → [홈 화면에 추가]\n\n로 설치할 수 있어요.\n(아이폰은 카톡 공유로 열기는 지원되지 않습니다)'
+    : '크롬 우측 상단 ⋮ 메뉴에서\n\n[앱 설치] 또는 [애플리케이션 설치]\n\n를 눌러 설치해 주세요.\n\n※ "홈 화면에 추가"만 있다면 잠시 뒤 새로고침 후 다시 시도하세요.\n※ 카카오톡 내부 브라우저가 아니라 크롬으로 열어야 합니다.');
+}
 async function loadSharedFile(){
   const q=new URLSearchParams(location.search);
   const flag=q.get('shared');
@@ -2570,6 +2601,9 @@ async function loadSharedFile(){
   updateCustGate();
   if(AUTH){ const t=allowedTabs(); if(!t.includes('measure')) switchTab(t[0]); }
   loadSharedFile();                                       // 카톡에서 공유로 넘어온 실측파일
+  if(!isStandalone() && /Android/i.test(navigator.userAgent)){
+    const b=$('#installBtn'); if(b) b.style.display='';    // 안드로이드는 설치 버튼 상시 노출
+  }
 })();
 </script>
 </body>
