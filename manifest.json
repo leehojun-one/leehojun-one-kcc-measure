@@ -1,0 +1,39 @@
+{
+  "name": "KCC글라스 현장 실측",
+  "short_name": "현장실측",
+  "description": "창호 현장 실측 · 실측작성 · 상담 · 도면",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1F4F9",
+  "theme_color": "#1B2559",
+  "lang": "ko",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "./share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "file",
+          "accept": [
+            "application/json",
+            "text/json",
+            "text/plain",
+            "application/octet-stream",
+            ".json",
+            ".kcc"
+          ]
+        }
+      ]
+    }
+  }
+}

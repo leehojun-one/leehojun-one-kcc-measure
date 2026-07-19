@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>현장 실측 · KCC글라스</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1B2559">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -468,7 +471,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v65</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v66</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -1505,8 +1508,12 @@ async function sendSessionFile(){
 function importSessionFile(file){
   if(!file) return;
   const reader=new FileReader();
-  reader.onload=()=>{
-    let obj; try{ obj=JSON.parse(reader.result); }catch(e){ toast('실측파일을 읽을 수 없어요'); return; }
+  reader.onload=()=>importSessionText(reader.result);
+  reader.readAsText(file);
+}
+function importSessionText(text){
+  {
+    let obj; try{ obj=JSON.parse(text); }catch(e){ toast('실측파일을 읽을 수 없어요'); return; }
     if(!obj || !Array.isArray(obj.windows) || !obj.windows.length){ toast('실측파일 형식이 아니에요'); return; }
     siteName=obj.site||''; custPhone=obj.phone||''; siteAddr=obj.addr||''; siteBuilding=obj.building||''; siteDetail=obj.detail||'';
     $('#siteInput').value=siteName; $('#custPhone').value=custPhone; sessionId=obj.id||('s'+Date.now()); editingIndex=null;
@@ -1519,8 +1526,7 @@ function importSessionFile(file){
     expandedIdx = windows.length?0:-1;
     switchTab('consult');
     toast(`실측파일 불러옴 (${windows.length}창) — 상담을 이어가세요`);
-  };
-  reader.readAsText(file);
+  }
 }
 $('#sendKakaoBtn').addEventListener('click',sendSessionFile);
 $('#importBtn').addEventListener('click',()=>$('#importFileInput').click());
@@ -2531,6 +2537,26 @@ $('#closeLoad').addEventListener('click',()=>$('#loadOverlay').classList.remove(
 $('#loadOverlay').addEventListener('click',e=>{ if(e.target===$('#loadOverlay')) $('#loadOverlay').classList.remove('show'); });
 
 /* init — 이전 작업 자동 복구 */
+/* ===== PWA · 카카오톡 공유 수신 =====
+   홈 화면에 추가하면 안드로이드 공유 시트에 '현장실측'이 나타나고,
+   카톡의 실측파일을 공유하면 이 앱이 열리면서 바로 불러옵니다. */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+async function loadSharedFile(){
+  const q=new URLSearchParams(location.search);
+  const flag=q.get('shared');
+  if(!flag) return false;
+  history.replaceState(null,'',location.pathname);       // 주소 정리
+  if(flag!=='1'){ toast('공유된 파일을 읽지 못했어요 — [받기]로 열어주세요'); return false; }
+  try{
+    const res=await fetch('./shared-file',{cache:'no-store'});
+    if(!res.ok) throw 0;
+    const text=await res.text();
+    importSessionText(text);
+    return true;
+  }catch(e){ toast('공유된 파일을 읽지 못했어요 — [받기]로 열어주세요'); return false; }
+}
 (function init(){
   const authed=requireAuth();
   applyRoleUI();
@@ -2543,6 +2569,7 @@ $('#loadOverlay').addEventListener('click',e=>{ if(e.target===$('#loadOverlay'))
   selectShape('2W'); selectSide('좌'); setActive('W1'); renderTray();
   updateCustGate();
   if(AUTH){ const t=allowedTabs(); if(!t.includes('measure')) switchTab(t[0]); }
+  loadSharedFile();                                       // 카톡에서 공유로 넘어온 실측파일
 })();
 </script>
 </body>
