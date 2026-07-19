@@ -356,8 +356,9 @@
   .meas-viewbar button{font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 12px;border-radius:10px;border:1px solid var(--hair);background:var(--surface);color:var(--ink-2);white-space:nowrap}
   .meas-viewbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .meas-viewbar span{font-family:var(--mono);font-size:11px;color:var(--muted)}
-  #drawMeasFit{width:100%;overflow:hidden}
-  #drawMeasFit.a3 #drawMeasSheet{transform-origin:top left}
+  #drawMeasFit,#drawFit{width:100%;overflow:hidden}
+  #drawMeasFit.a3 #drawMeasSheet,#drawFit.a3 #drawSheet{transform-origin:top left}
+  @media print{ #drawFit{overflow:visible !important;height:auto !important} }
   /* 로그인 */
   #loginGate{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#EEF2F7,#E2E8F0);display:none;align-items:center;justify-content:center;padding:20px}
   #loginGate.show{display:flex}
@@ -479,7 +480,7 @@
 
 <div class="top">
   <header>
-    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v69</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
+    <div><div class="eyebrow">KCC글라스 · 현장 실측 <b style="color:var(--brand);font-weight:700">v70</b><span class="me-badge" id="meBadge" style="display:none"><b id="meName"></b><span class="role" id="meRole"></span><button id="logsBtn" style="display:none">로그</button><button id="pwBtn">비번변경</button><button id="logoutBtn">로그아웃</button></span></div><h1>실측 작업</h1></div>
     <div class="conn"><div class="dot" id="dot"></div><div class="ct"><b id="connState">미연결</b>측정기</div><button class="btn sm" id="connectBtn">연결</button></div>
   </header>
   <div class="site-bar" style="gap:7px">
@@ -608,9 +609,9 @@
     <div class="dw-opts">
       <span class="dw-fixed">A3 가로</span>
       <div class="dw-scale">
-        <button id="dwZoomOut">−</button>
-        <span id="dwScaleLabel">100%</span>
-        <button id="dwZoomIn">＋</button>
+        <button id="dwColMinus">−</button>
+        <span id="dwScaleLabel">8단</span>
+        <button id="dwColPlus">＋</button>
       </div>
       <span class="dw-pageinfo" id="dwPageInfo"></span>
     </div>
@@ -620,7 +621,7 @@
       <button id="drawPng">🖼 PNG</button>
     </div>
   </div>
-  <div class="dw-sheet" id="drawSheet"></div>
+  <div id="drawFit"><div class="dw-sheet" id="drawSheet"></div></div>
 </div>
 
 <!-- 견적 오버레이 삭제됨 -->
@@ -1549,6 +1550,28 @@ $('#addWinBtn').addEventListener('click',()=>{ returnTab='write'; resetForm(); s
 $('#writeNextBtn').addEventListener('click',()=>{ if(!windows.length){ toast('작성할 창이 없어요'); return; } snapMeasurement(); switchTab('measDraw'); });
 $('#toConsultBtn').addEventListener('click',()=>switchTab('consult'));
 $('#measPrintBtn').addEventListener('click',()=>{ logEvent('meas_print','실측도면 출력'); openDrawing(); });
+/* A3 가로 판형을 컨테이너 폭에 맞춰 통째로 축소 — 최종도면·실측도면 공통 */
+const A3_PX = ()=> (A3L.w-MARGIN*2)*3.7795;
+function fitA3(fit, sheet, cols){
+  if(!fit||!sheet) return;
+  const grid=sheet.querySelector('.dw-grid');
+  const px=A3_PX();
+  fit.classList.add('a3');
+  sheet.style.width=px+'px';
+  if(grid) grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  requestAnimationFrame(()=>{
+    const scale=(fit.clientWidth||1)/px;
+    sheet.style.transform=`scale(${scale})`;
+    fit.style.height=(sheet.scrollHeight*scale)+'px';
+  });
+}
+function unfitA3(fit, sheet){
+  if(!fit||!sheet) return;
+  const grid=sheet.querySelector('.dw-grid');
+  fit.classList.remove('a3');
+  sheet.style.width=''; sheet.style.transform=''; fit.style.height='';
+  if(grid) grid.style.gridTemplateColumns='';
+}
 /* 실측도면을 최종도면과 같은 A3 가로 판형으로 미리보기 (화면 폭에 맞춰 축소) */
 let measViewA3 = true;
 function applyMeasPaper(){
@@ -1558,22 +1581,14 @@ function applyMeasPaper(){
   const grid=sheet.querySelector('.dw-grid');
   if(btn){ btn.classList.toggle('on', measViewA3); btn.textContent = measViewA3? '📐 A3 가로 미리보기' : '📱 크게 보기'; }
   if(!measViewA3){                                   // 화면에 맞춘 읽기 편한 보기
-    fit.classList.remove('a3');
-    sheet.style.width=''; sheet.style.transform=''; fit.style.height='';
-    if(grid) grid.style.gridTemplateColumns='';
+    unfitA3(fit, sheet);
     if(info) info.textContent='화면 맞춤 보기';
     return;
   }
   const usableW=A3L.w-MARGIN*2, usableH=A3L.h-MARGIN*2;
-  const cols=Math.max(1, Math.floor(usableW/(46*dwZoom)));
-  const px=usableW*3.7795;                           // mm → px
-  fit.classList.add('a3');
-  sheet.style.width=px+'px';
-  if(grid) grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const cols=Math.max(1, dwCols);
+  fitA3(fit, sheet, cols);
   requestAnimationFrame(()=>{
-    const scale=(fit.clientWidth||1)/px;
-    sheet.style.transform=`scale(${scale})`;
-    fit.style.height=(sheet.scrollHeight*scale)+'px';
     if(info){
       const total=sheet.querySelectorAll('.dw-card').length;
       const rows=Math.ceil(total/cols);
@@ -1583,7 +1598,10 @@ function applyMeasPaper(){
     }
   });
 }
-window.addEventListener('resize',()=>{ if($('#drawMeasTab').style.display!=='none') applyMeasPaper(); });
+window.addEventListener('resize',()=>{
+  if($('#drawMeasTab').style.display!=='none') applyMeasPaper();
+  if($('#drawOverlay').classList.contains('show')) applyPaper();
+});
 window.addEventListener('orientationchange',()=>setTimeout(()=>{ if($('#drawMeasTab').style.display!=='none') applyMeasPaper(); },350));
 /* 실측도면 PNG — 모바일에선 공유 시트(카톡)로, 안 되면 저장 */
 async function exportMeasPNG(){
@@ -2107,12 +2125,12 @@ function frameCard(w,i){
 /* ===== 출력 엔진 — A3 가로 고정 ===== */
 const A3L={w:420,h:297};   // A3 가로 (mm)
 const MARGIN=8;
-let dwZoom=1.0;            // 도면 배율 (auto.py의 scale 역할)
+let dwZoom=1.0;            // (내부용) 카드 폭 배율
+let dwCols=8;              // A3 가로 1페이지에 넣을 단 수 — 사용자가 직접 선택
 function applyPaper(){
   const usableW=A3L.w-MARGIN*2;              // 404mm
   const usableH=A3L.h-MARGIN*2;              // 281mm
-  const cardMM=46*dwZoom;                    // 카드 1개 폭(mm)
-  const cols=Math.max(1, Math.floor(usableW/cardMM));
+  const cols=Math.max(1, dwCols);            // 사용자가 고른 단 수
   const cardW=usableW/cols;                  // 실제 카드 폭(mm) — 용지를 꽉 채움
   let st=document.getElementById('dwPageStyle');
   if(!st){ st=document.createElement('style'); st.id='dwPageStyle'; document.head.appendChild(st); }
@@ -2129,9 +2147,9 @@ function applyPaper(){
       #drawSheet .dw-slogan{margin-top:2.5mm !important; padding:2mm !important}
     }`;
   const sheet=$('#drawSheet');
-  sheet.style.setProperty('--dwzoom', dwZoom);
   sheet.style.setProperty('--dwcols', cols);
-  $('#dwScaleLabel').textContent=Math.round(dwZoom*100)+'%';
+  $('#dwScaleLabel').textContent=cols+'단';
+  fitA3(document.getElementById('drawFit'), sheet, cols);   // 화면에서도 A3 판형 그대로
   // 페이지 수 추정 — 카드 높이 ≈ 폭 × 1.05 (여백 축소 반영)
   const total=document.querySelectorAll('#drawSheet .dw-card').length;
   const rows=Math.ceil(total/cols);
@@ -2141,8 +2159,14 @@ function applyPaper(){
   $('#dwPageInfo').textContent=`${cols}단 · ${rows}줄 · ${pages}페이지`;
   $('#dwPageInfo').classList.toggle('warn', pages>1);
 }
-$('#dwZoomIn').addEventListener('click',()=>{ dwZoom=Math.min(2.5, +(dwZoom+0.1).toFixed(2)); applyPaper(); });
-$('#dwZoomOut').addEventListener('click',()=>{ dwZoom=Math.max(0.5, +(dwZoom-0.1).toFixed(2)); applyPaper(); });
+function setCols(n){
+  dwCols=Math.max(4, Math.min(10, n));
+  applyPaper();
+  if($('#drawMeasTab').style.display!=='none') applyMeasPaper();
+  toast(`A3 가로 · ${dwCols}단`);
+}
+$('#dwColPlus').addEventListener('click',()=>setCols(dwCols+1));
+$('#dwColMinus').addEventListener('click',()=>setCols(dwCols-1));
 
 /* PNG 저장 — html2canvas (SVG 포함 안정 렌더) */
 async function exportPNG(rootSel, filename){
